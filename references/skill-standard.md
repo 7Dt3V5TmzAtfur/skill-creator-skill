@@ -9,7 +9,7 @@ brand assets unless the skill is explicitly marked author-only.
 
 - Use Agent Skills-compatible names: lowercase letters, numbers, and hyphens.
 - Prefer `lovstudio-<name>` in `SKILL.md` frontmatter.
-- Avoid `lovstudio:<name>` for new skills. Treat colon names as legacy aliases.
+- Avoid namespace-style LovStudio names for new skills. Treat them as legacy aliases.
 - Source repos may still be named `<name>-skill`, but installed/distributed
   skill directories should resolve to `lovstudio-<name>/` so the directory and
   frontmatter name can match in user environments.
@@ -114,4 +114,4 @@ Use these labels when auditing existing skills:
 - `config-needed`: useful to public users, but needs a profile/env layer.
 - `lovstudio-defaults`: generic core with optional LovStudio defaults.
 - `author-only`: intentionally tied to Mark/LovStudio private workspace.
-- `legacy-name`: still uses `lovstudio:<name>` or mismatched directory naming.
+- `legacy-name`: still uses namespace-style or mismatched directory naming.

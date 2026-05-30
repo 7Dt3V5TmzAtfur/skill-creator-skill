@@ -399,7 +399,7 @@ def main():
 
     # Normalize: strip common prefixes / suffix users might paste
     name = args.name
-    for pfx in ("lovstudio:", "lovstudio-"):
+    for pfx in ("lovstudio-",):
         if name.startswith(pfx):
             name = name[len(pfx):]
     if name.endswith("-skill"):

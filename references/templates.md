@@ -155,7 +155,7 @@ Or through Claude Code plugin marketplace:
 - Version source of truth: `README.md` badge. `SKILL.md` frontmatter
   `metadata.version` is kept in sync by `skill-optimizer`.
 - New skills use Agent Skills-compatible frontmatter names:
-  `lovstudio-<name>`. Legacy `lovstudio:<name>` skills should be migrated
+  `lovstudio-<name>`. Legacy namespace-style names should be migrated
   opportunistically, not copied into new templates.
 - User-specific paths, workspaces, brand profiles, and design guides must be
   initialized through `references/user-config.md`, environment variables, or

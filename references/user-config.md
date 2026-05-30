@@ -87,4 +87,4 @@ If neither exists, ask the user once and default to `$HOME/Documents`.
 - `config-needed`: reusable, but needs a profile/env layer before public use.
 - `lovstudio-defaults`: generic core with optional LovStudio defaults.
 - `author-only`: intentionally tied to Mark/LovStudio private workspace.
-- `legacy-name`: still uses `lovstudio:<name>` or mismatched directory naming.
+- `legacy-name`: still uses namespace-style or mismatched directory naming.

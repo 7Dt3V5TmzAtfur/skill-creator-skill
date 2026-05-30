@@ -72,8 +72,8 @@ Key facts:
 - Dev-skills catalog entry uses `repo: lovstudio/dev-skills` and `skill_path: skills/{name}`
 - Agent runtimes read an installed directory named `lovstudio-{name}/`.
 - Frontmatter `name`: `lovstudio-{name}` (Agent Skills-compatible). Legacy
-  `lovstudio:{name}` names are kept only for older skills and should not be
-  copied into new templates.
+  namespace-style names are kept only for older skills and should not be copied
+  into new templates.
 - Frontmatter `depends_on`: optional list of required skill names from those
   skills' own `SKILL.md` frontmatter. Use it when one skill must reuse another
   instead of duplicating implementation. In `skills.yaml`, use catalog names
