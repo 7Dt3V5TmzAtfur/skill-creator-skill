@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.8.0
+
+- Make `lovstudio/{name}-skill` the only supported source-repository model.
+- Treat `lovstudio/dev-skills` as a release-driven generated aggregate mirror.
+- Scaffold CI, MIT license, and changelog files for every new independent skill.
+- Reject the retired `--target dev-skills` mode with migration guidance.
+
 All notable changes to this skill are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: [SemVer](https://semver.org/)
 

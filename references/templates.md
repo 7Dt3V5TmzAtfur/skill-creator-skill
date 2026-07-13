@@ -130,10 +130,11 @@ python3 "$SKILL_DIR/scripts/<script>.py" --input file.ext --output result.ext
 MIT
 ```
 
-## Dev-Skills README Install Block
+## Optional Dev-Skills Aggregate Install Block
 
-Use this block instead of the independent `git clone` install when the skill
-lives directly in `lovstudio/dev-skills`:
+Add this as a secondary install option when an independently versioned Meta /
+Dev Tools skill is mirrored into `lovstudio/dev-skills`. Keep the independent
+repository install as the primary source install:
 
 ~~~markdown
 ## Install
@@ -168,5 +169,5 @@ Or through Claude Code plugin marketplace:
 - `depends_on` may appear in SKILL.md frontmatter when a skill requires another
   skill. Use the dependency skill's exact SKILL.md `name`; when registering the
   same relationship in `skills.yaml`, use the catalog skill name.
-- Dev-skills entries use `repo: lovstudio/dev-skills` and
-  `skill_path: skills/<name>` in `~/lovstudio/coding/lovstudio-dev-skills/skills.yaml`.
+- Dev-skills entries use `repo: lovstudio/<name>-skill`; the aggregate mirror
+  path is generated from the latest release by the dev-skills sync workflow.

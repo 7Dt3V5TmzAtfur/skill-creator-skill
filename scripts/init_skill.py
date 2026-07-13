@@ -5,8 +5,6 @@ Initialize a new lovstudio skill scaffold.
 Usage:
     python3 init_skill.py <name>
     python3 init_skill.py <name> --paid
-    python3 init_skill.py <name> --target dev-skills
-    python3 init_skill.py <name> --dev-skills
     python3 init_skill.py <name> --path /custom/path
 
 Examples:
@@ -14,9 +12,6 @@ Examples:
         → <configured repos root>/fill-form-skill/
     python3 init_skill.py any2pptx
         → <configured repos root>/any2pptx-skill/
-    python3 init_skill.py tanstack-query --target dev-skills
-        → <configured dev-skills root>/tanstack-query/
-
 Default base directories resolve from --path, LOVSTUDIO_SKILL_CREATOR_* env
 vars, the shared profile JSON, then a safe current-directory fallback.
 """
@@ -223,6 +218,49 @@ node_modules/
 .env.local
 '''
 
+LICENSE_MD = '''MIT License
+
+Copyright (c) 2026 LovStudio
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+'''
+
+CHANGELOG_MD = '''# Changelog
+
+## 0.1.0
+
+- Initial independent skill release.
+'''
+
+VALIDATE_WORKFLOW = '''name: Validate skill
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    uses: lovstudio/dev-skills/.github/workflows/validate-skill.yml@main
+    with:
+      skill_name: lovstudio-{name}
+'''
+
 USER_CONFIG_MD = '''# User Configuration
 
 This skill follows the portable agent skill profile contract. It must not
@@ -333,21 +371,13 @@ def resolve_base(target: str, cli_path: str) -> Path:
         return _expand_path(cli_path)
 
     profile_path, profile = _load_profile()
-    if target == "dev-skills":
-        env_key = "LOVSTUDIO_SKILL_CREATOR_DEV_SKILLS_ROOT"
-        profile_keys = (
-            "lovstudio.dev_skills_root",
-            "skills.dev_skills_root",
-            "workspace.dev_skills_root",
-        )
-    else:
-        env_key = "LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"
-        profile_keys = (
-            "lovstudio.skill_repos_root",
-            "skills.repos_root",
-            "workspace.skill_repos_root",
-            "workspace.skills_root",
-        )
+    env_key = "LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"
+    profile_keys = (
+        "lovstudio.skill_repos_root",
+        "skills.repos_root",
+        "workspace.skill_repos_root",
+        "workspace.skills_root",
+    )
 
     if os.environ.get(env_key):
         return _expand_path(os.environ[env_key])
@@ -356,20 +386,7 @@ def resolve_base(target: str, cli_path: str) -> Path:
     if profile_value:
         return _expand_path(profile_value)
 
-    cwd = Path.cwd()
-    if target == "repo":
-        return cwd
-
-    dev_base = _default_dev_skills_base(cwd)
-    if dev_base:
-        return dev_base
-
-    print(
-        "ERROR: dev-skills target needs --path, LOVSTUDIO_SKILL_CREATOR_DEV_SKILLS_ROOT, "
-        f"or a dev_skills_root value in {profile_path}",
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    return Path.cwd()
 
 
 def main():
@@ -379,12 +396,12 @@ def main():
         "--target",
         choices=("repo", "dev-skills"),
         default="repo",
-        help="Scaffold target: independent per-skill repo (default) or lovstudio/dev-skills bundle",
+        help="Scaffold target. 'dev-skills' is deprecated and rejected; all sources are independent repos.",
     )
     ap.add_argument(
         "--dev-skills",
         action="store_true",
-        help="Shortcut for --target dev-skills",
+        help="Deprecated. dev-skills is now a generated aggregate mirror.",
     )
     ap.add_argument(
         "--path",
@@ -412,13 +429,18 @@ def main():
         sys.exit(1)
 
     target = "dev-skills" if args.dev_skills else args.target
-    if target == "dev-skills" and args.paid:
-        print("ERROR: --target dev-skills is only for free Meta / Dev Tools skills. Use the default independent repo target for paid skills.", file=sys.stderr)
+    if target == "dev-skills":
+        print(
+            "ERROR: --target dev-skills was retired in 2.8.0. Create the default "
+            "independent lovstudio/<name>-skill repo, publish a release, then "
+            "register it in lovstudio/dev-skills for automatic mirroring.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     base = resolve_base(target, args.path)
     base.mkdir(parents=True, exist_ok=True)
-    skill_dir = base / name if target == "dev-skills" else base / f"{name}-skill"
+    skill_dir = base / f"{name}-skill"
 
     if skill_dir.exists():
         print(f"ERROR: {skill_dir} already exists", file=sys.stderr)
@@ -427,12 +449,17 @@ def main():
     skill_dir.mkdir()
     (skill_dir / "scripts").mkdir()
     (skill_dir / "references").mkdir()
+    (skill_dir / ".github" / "workflows").mkdir(parents=True)
 
     (skill_dir / "SKILL.md").write_text(SKILL_MD.format(name=name))
-    readme = DEV_SKILLS_README_MD if target == "dev-skills" else README_MD
-    (skill_dir / "README.md").write_text(readme.format(name=name))
+    (skill_dir / "README.md").write_text(README_MD.format(name=name))
     (skill_dir / "references" / "user-config.md").write_text(USER_CONFIG_MD.format(name=name))
     (skill_dir / ".gitignore").write_text(GITIGNORE)
+    (skill_dir / "LICENSE").write_text(LICENSE_MD)
+    (skill_dir / "CHANGELOG.md").write_text(CHANGELOG_MD)
+    (skill_dir / ".github" / "workflows" / "validate.yml").write_text(
+        VALIDATE_WORKFLOW.format(name=name)
+    )
 
     print(f"✓ Created {skill_dir}/")
     print(f"  SKILL.md      — AI-facing frontmatter + workflow")
@@ -442,31 +469,15 @@ def main():
     print(f"  .gitignore")
     print()
     print("Next steps:")
-    if target == "dev-skills":
-        dev_root = skill_dir.parents[1]
-        print(f"  1. cd {dev_root}")
-        print(f"  2. Implement skills/{name}/ and fill TODO placeholders in SKILL.md / README.md")
-        print("  3. Add to skills.yaml:")
-        print(f"       - name: {name}")
-        print("         repo: lovstudio/dev-skills")
-        print(f"         skill_path: skills/{name}")
-        print("         paid: false")
-        print('         category: "Dev Tools"  # or "Meta"')
-        print("         version: \"0.1.0\"")
-        print(f"  4. Add ./skills/{name} to .claude-plugin/marketplace.json under meta or dev-tools")
-        print("  5. python3 scripts/render-readme.py")
-        print(f"  6. Install or symlink {skill_dir} into your agent's skills directory as lovstudio-{name}")
-        print(f"  7. git add skills.yaml README.md README.en.md .claude-plugin/marketplace.json skills/{name}")
-        print(f"     git commit -m 'add: {name} skill'")
-    else:
-        print(f"  1. cd {skill_dir}")
-        print(f"  2. Implement scripts/ and fill TODO placeholders in SKILL.md / README.md")
-        print(f"  3. git init && git add -A && git commit -m 'feat: initial release of {name} skill'")
-        visibility = "--private" if args.paid else "--public"
-        print(f"  4. gh repo create lovstudio/{name}-skill {visibility} --source=. --push")
-        print(f"  5. Install or symlink {skill_dir} into your agent's skills directory as lovstudio-{name}")
-        paid_flag = "true" if args.paid else "false"
-        print(f"  6. Register in your general-skills checkout skills.yaml (paid: {paid_flag})")
+    print(f"  1. cd {skill_dir}")
+    print(f"  2. Implement scripts/ and fill TODO placeholders in SKILL.md / README.md")
+    print(f"  3. git init && git add -A && git commit -m 'feat: initial release of {name} skill'")
+    visibility = "--private" if args.paid else "--public"
+    print(f"  4. gh repo create lovstudio/{name}-skill {visibility} --source=. --push")
+    print(f"  5. Tag and publish v0.1.0 so aggregate mirrors can sync the release")
+    print(f"  6. Install or symlink {skill_dir} into your agent's skills directory as lovstudio-{name}")
+    paid_flag = "true" if args.paid else "false"
+    print(f"  7. Register in the appropriate catalog (paid: {paid_flag})")
 
 
 if __name__ == "__main__":
