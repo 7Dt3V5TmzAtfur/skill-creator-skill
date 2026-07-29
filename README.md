@@ -1,12 +1,14 @@
 # lovstudio-skill-creator
 
-![Version](https://img.shields.io/badge/version-2.8.0-CC785C)
+![Version](https://img.shields.io/badge/version-2.9.0-CC785C)
 
 Scaffold new skills for the lovstudio ecosystem as **independent GitHub repos**
 at `lovstudio/{name}-skill`. [`lovstudio/dev-skills`](https://github.com/lovstudio/dev-skills)
 is a generated distribution mirror, not a source repository.
 New scaffolds use Agent Skills-compatible `lovstudio-<name>` frontmatter and a
 portable user configuration layer for workspace, output, and brand settings.
+There is no repository-target prompt: every source is created at
+`lovstudio/{name}-skill`; catalogs and bundles are downstream distribution.
 
 Part of [lovstudio general skills](https://github.com/lovstudio/general-skills) &mdash; by [lovstudio.ai](https://lovstudio.ai)
 

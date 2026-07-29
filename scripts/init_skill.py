@@ -154,59 +154,6 @@ python3 "$SKILL_DIR/scripts/TODO.py" --input file.ext --output result.ext
 MIT
 '''
 
-DEV_SKILLS_README_MD = '''# lovstudio-{name}
-
-![Version](https://img.shields.io/badge/version-0.1.0-CC785C)
-
-TODO: One-line description.
-
-Part of [lovstudio dev-skills](https://github.com/lovstudio/dev-skills) — by [lovstudio.ai](https://lovstudio.ai)
-
-## Install
-
-```bash
-npx skills add lovstudio/dev-skills
-```
-
-Or through Claude Code plugin marketplace:
-
-```text
-/plugin marketplace add lovstudio/dev-skills
-/plugin install dev-tools@lovstudio-dev
-```
-
-Requires: Python 3.8+ and `pip install TODO`
-
-## Configuration
-
-This skill is portable by default. User-specific paths and brand settings should
-be provided through CLI flags, environment variables, or:
-
-```bash
-${{LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}}
-```
-
-See `references/user-config.md`.
-
-## Usage
-
-```bash
-SKILL_DIR="${{LOVSTUDIO_SKILLS_INSTALL_DIR:?Set LOVSTUDIO_SKILLS_INSTALL_DIR}}/lovstudio-{name}"
-python3 "$SKILL_DIR/scripts/TODO.py" --input file.ext --output result.ext
-```
-
-## Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--input` | (required) | TODO |
-| `--output` | `output.ext` | TODO |
-
-## License
-
-MIT
-'''
-
 GITIGNORE = '''__pycache__/
 *.pyc
 *.pyo
@@ -358,19 +305,11 @@ def _profile_first(data: dict, keys: Tuple[str, ...]) -> Optional[str]:
     return None
 
 
-def _default_dev_skills_base(cwd: Path) -> Optional[Path]:
-    if cwd.name == "skills" and (cwd.parent / "skills.yaml").exists():
-        return cwd
-    if (cwd / "skills.yaml").exists() and (cwd / "skills").is_dir():
-        return cwd / "skills"
-    return None
-
-
-def resolve_base(target: str, cli_path: str) -> Path:
+def resolve_base(cli_path: str) -> Path:
     if cli_path:
         return _expand_path(cli_path)
 
-    profile_path, profile = _load_profile()
+    _, profile = _load_profile()
     env_key = "LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"
     profile_keys = (
         "lovstudio.skill_repos_root",
@@ -390,19 +329,12 @@ def resolve_base(target: str, cli_path: str) -> Path:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Initialize a new lovstudio skill")
+    ap = argparse.ArgumentParser(
+        description=(
+            "Initialize a new independent lovstudio/{name}-skill source repository"
+        )
+    )
     ap.add_argument("name", help="Skill short name (no prefix / no -skill suffix)")
-    ap.add_argument(
-        "--target",
-        choices=("repo", "dev-skills"),
-        default="repo",
-        help="Scaffold target. 'dev-skills' is deprecated and rejected; all sources are independent repos.",
-    )
-    ap.add_argument(
-        "--dev-skills",
-        action="store_true",
-        help="Deprecated. dev-skills is now a generated aggregate mirror.",
-    )
     ap.add_argument(
         "--path",
         default="",
@@ -428,17 +360,7 @@ def main():
         )
         sys.exit(1)
 
-    target = "dev-skills" if args.dev_skills else args.target
-    if target == "dev-skills":
-        print(
-            "ERROR: --target dev-skills was retired in 2.8.0. Create the default "
-            "independent lovstudio/<name>-skill repo, publish a release, then "
-            "register it in lovstudio/dev-skills for automatic mirroring.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    base = resolve_base(target, args.path)
+    base = resolve_base(args.path)
     base.mkdir(parents=True, exist_ok=True)
     skill_dir = base / f"{name}-skill"
 

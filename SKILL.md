@@ -23,7 +23,7 @@ compatibility: >
   vars, or the shared profile JSON.
 metadata:
   author: lovstudio
-  version: "2.8.0"
+  version: "2.9.0"
   tags: skill-creator scaffold generator lovstudio
 ---
 
@@ -87,8 +87,13 @@ Key facts:
 ### Step 1: Understand the Skill
 
 Ask the user what the skill should do. Use `AskUserQuestion` — one question at
-a time, in the order below. **Do not skip or reorder.** The distribution model
+a time, in the order below. **Do not skip or reorder.** The commercial model
 decides the architecture, so it has to come before any implementation question.
+
+**Source repository invariant — do not ask:** every skill source lives in its
+own `lovstudio/{name}-skill` repository. Never ask the user to choose a source
+repository or scaffold target. Catalog and bundle registration are downstream
+distribution decisions inferred from category and commercial model.
 
 **Required question order:**
 
@@ -109,13 +114,6 @@ you can't infer from the initial request.
 - 选 1 → 走标准公开 repo 流程
 - 选 2 → 走 encrypted skill 流程(README 里坦诚说明 "加密 = 鉴权闸门,不保证反提取")
 - 选 3 → **停下来读 `references/cloud-split.md`**,然后走 cloud-split 流程
-
-#### Q1.5. Distribution index — infer unless it changes product behavior
-
-The source target is fixed: `lovstudio/{name}-skill`. Free Meta / Dev Tools
-skills may additionally be registered in `lovstudio/dev-skills`, but that only
-adds an automatically synchronized distribution mirror. General and paid
-skills belong in `lovstudio/general-skills`.
 
 #### Q2. Problem & shape
 - 解决什么问题?输入 → 输出是什么?
@@ -302,9 +300,16 @@ See `references/skill-standard.md` for the current LovStudio skill standard.
 
 ### Step 5: Publish
 
-Follow the branch matching Q1.5.
+Always publish the skill's own repository first. Then infer distribution:
 
-### Independent Repo Target
+- Register general, public-facing, and paid skills in
+  `lovstudio/general-skills`.
+- Free Meta / Dev Tools skills may additionally be registered in
+  `lovstudio/dev-skills`; its checked-in skill directory is a generated mirror
+  of the independent release.
+- Do not ask the user where the source should live.
+
+### Single Source Repository
 
 #### 5a. Initialize & push the skill's own repo
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.9.0
+
+- Remove the repository-target question from the interactive creation flow.
+- Remove the obsolete `--target` and `--dev-skills` scaffold arguments.
+- Make `lovstudio/{name}-skill` an unconditional source-repository invariant.
+- Keep general-skills and dev-skills as inferred downstream distribution only.
+
 ## 2.8.0
 
 - Make `lovstudio/{name}-skill` the only supported source-repository model.

@@ -10,9 +10,11 @@ brand assets unless the skill is explicitly marked author-only.
 - Use Agent Skills-compatible names: lowercase letters, numbers, and hyphens.
 - Prefer `lovstudio-<name>` in `SKILL.md` frontmatter.
 - Avoid namespace-style LovStudio names for new skills. Treat them as legacy aliases.
-- Source repos may still be named `<name>-skill`, but installed/distributed
-  skill directories should resolve to `lovstudio-<name>/` so the directory and
-  frontmatter name can match in user environments.
+- Every source repo must live at `lovstudio/<name>-skill`. Repository placement
+  is an invariant, not an interactive choice.
+- Installed/distributed skill directories should resolve to
+  `lovstudio-<name>/` so the directory and frontmatter name can match in user
+  environments.
 
 ## Runtime Portability
 

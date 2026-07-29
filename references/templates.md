@@ -153,6 +153,9 @@ Or through Claude Code plugin marketplace:
 
 ## Notes
 
+- Source repository placement is not a user choice. Always scaffold and publish
+  `lovstudio/<name>-skill`; catalogs and bundles are downstream distribution
+  indexes.
 - Version source of truth: `README.md` badge. `SKILL.md` frontmatter
   `metadata.version` is kept in sync by `skill-optimizer`.
 - New skills use Agent Skills-compatible frontmatter names:

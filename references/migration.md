@@ -1,5 +1,15 @@
 # Migration Notes
 
+## 2026-07: one source path, no repository-target prompt
+
+The creator no longer exposes `--target`, `--dev-skills`, or a repository
+choice in the interactive flow. Every scaffold is created as the source for
+`lovstudio/<name>-skill`.
+
+General-skills and dev-skills are downstream distribution indexes. Register
+them after the independent repo is released; do not treat either catalog as a
+scaffold destination.
+
 ## 2026-07: independent sources with a generated dev-skills aggregate
 
 Every skill now has one source of truth: `lovstudio/<name>-skill`. Free Meta /
