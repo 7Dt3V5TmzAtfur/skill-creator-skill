@@ -174,3 +174,6 @@ Or through Claude Code plugin marketplace:
   same relationship in `skills.yaml`, use the catalog skill name.
 - Dev-skills entries use `repo: lovstudio/<name>-skill`; the aggregate mirror
   path is generated from the latest release by the dev-skills sync workflow.
+- Publication is complete only after `https://lovstudio.ai/skills/<name>`
+  returns HTTP 200 with the released version and current content. Catalog
+  registration, cache revalidation, and live verification are mandatory.

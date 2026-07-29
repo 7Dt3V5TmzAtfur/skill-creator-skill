@@ -23,7 +23,7 @@ compatibility: >
   vars, or the shared profile JSON.
 metadata:
   author: lovstudio
-  version: "2.9.0"
+  version: "2.9.1"
   tags: skill-creator scaffold generator lovstudio
 ---
 
@@ -357,27 +357,16 @@ gh pr create --fill
 Make the skill immediately usable by installing or symlinking the source
 checkout into the user's agent skills directory as `lovstudio-<name>`.
 
-#### 5d. Trigger lovstudio.ai cache refresh (optional)
+#### 5d. Synchronize to lovstudio.ai/skills (MANDATORY)
 
-After the skill is indexed in `skills.yaml`, the lovstudio.ai `/agent` page caches
-the index for 1 hour (Next.js ISR). Trigger on-demand revalidation so the new
-skill appears immediately:
+Publishing is incomplete until the skill is visible at
+`https://lovstudio.ai/skills/<name>`. After the catalog change reaches `main`,
+read `references/publishing.md` and run its cache-revalidation and live
+verification workflow.
 
-```bash
-if [ -n "$LOVSTUDIO_REVALIDATE_SECRET" ]; then
-  curl -sfX POST https://lovstudio.ai/api/revalidate \
-    -H "x-revalidate-secret: $LOVSTUDIO_REVALIDATE_SECRET" \
-    -H "content-type: application/json" \
-    -d '{"tags":["skills-index"]}' \
-    && echo "✓ cache refreshed" \
-    || echo "⚠ revalidate failed (will appear within 1h)"
-fi
-```
-
-Known tags (see `lovstudio/web:src/data/skills.ts`):
-- `skills-index` — the yaml index (invalidates all list pages)
-- `skill:<id>` — detail for a single skill
-- `skill-cases:<id>` — cases.json for a skill
+Do not report the skill as published until `/skills` lists it,
+`/skills/<name>` returns HTTP 200, and the visible version and content match
+the release.
 
 ### Dev-Skills Distribution Mirror
 

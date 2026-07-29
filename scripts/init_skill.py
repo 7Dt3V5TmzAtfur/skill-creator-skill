@@ -400,6 +400,7 @@ def main():
     print(f"  6. Install or symlink {skill_dir} into your agent's skills directory as lovstudio-{name}")
     paid_flag = "true" if args.paid else "false"
     print(f"  7. Register in the appropriate catalog (paid: {paid_flag})")
+    print(f"  8. Revalidate and verify https://lovstudio.ai/skills/{name}")
 
 
 if __name__ == "__main__":

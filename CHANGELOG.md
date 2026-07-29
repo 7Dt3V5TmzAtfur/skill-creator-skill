@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.1
+
+- Make synchronization to `lovstudio.ai/skills` a mandatory publication step.
+- Revalidate catalog, detail, cases, and user-facing routes after catalog merge.
+- Require live HTTP, version, and content checks before reporting publication.
+
 ## 2.9.0
 
 - Remove the repository-target question from the interactive creation flow.

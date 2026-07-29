@@ -35,6 +35,19 @@ brand assets, or workspace settings:
    under `$HOME/Documents`.
 5. Ask the user once and explain what setting is missing.
 
+## Publication Completion
+
+Every released skill must be registered in the appropriate LovStudio catalog
+and synchronized to `https://lovstudio.ai/skills`.
+
+A publication is complete only when:
+
+- The source release exists at `lovstudio/<name>-skill`.
+- The catalog entry has reached the catalog repository's `main` branch.
+- Relevant `skills-index`, catalog, detail, and cases cache tags are
+  revalidated.
+- `/skills/<name>` returns HTTP 200 and displays the released version.
+
 ## User Profile Contract
 
 Portable skills may read a shared JSON profile at:
