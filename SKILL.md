@@ -1,30 +1,20 @@
 ---
 name: lovstudio-skill-creator
-category: Meta Skills
-tagline: "Scaffold independently versioned lovstudio skill repositories."
 description: >
-  Create new skills for the lovstudio ecosystem as independent GitHub repos at
-  lovstudio/{name}-skill. The lovstudio/dev-skills repository is a generated
-  aggregate mirror and is never the source of truth. The workflow also sets up
-  local symlinks for immediate use and registers the skill in the appropriate
-  index (skills.yaml + README.md).
-  Lovstudio conventions: Agent Skills-compatible `lovstudio-{name}`
-  frontmatter, mandatory README.md per skill, `depends_on` frontmatter for
-  required skill-level dependencies, AskUserQuestion interactive flow,
-  standalone Python CLI scripts with argparse, CJK text handling, and a
-  portable user configuration layer for local paths and brand settings.
-  Use when the user wants to create a new skill, add a skill to the lovstudio
-  ecosystem, scaffold a skill, or mentions "新建skill", "创建skill", "封装成skill",
-  "new skill", "add skill", "scaffold skill", "生成skill".
+  创建可发布的 LovStudio Skill 或自包含 Skill Kit，自动生成触发规则、标准 YAML、
+  依赖校验与腾讯 WorkBuddy 发行包。适用于“创建 skill”“生成 Skill Kit”
+  “scaffold skill”或“适配 WorkBuddy”等请求。
 license: MIT
-compatibility: >
-  Scaffolds into a configured skills workspace. Requires Python 3.8+, git,
-  and gh CLI. Source roots resolve from --path, LOVSTUDIO_SKILL_CREATOR_* env
-  vars, or the shared profile JSON.
 metadata:
   author: lovstudio
-  version: "2.9.1"
-  tags: skill-creator scaffold generator lovstudio
+  version: "3.0.0"
+  tags:
+    - skill-creator
+    - scaffold
+    - workbuddy
+    - skill-kit
+  compatibility: "Python 3.8+, PyYAML, git, and gh CLI."
+  dependencies: []
 ---
 
 # lovstudio-skill-creator
@@ -33,6 +23,18 @@ Scaffold every new lovstudio skill as an **independent GitHub repo** under
 `lovstudio/{name}-skill`. `lovstudio/dev-skills` is a generated distribution
 bundle: its `skills/{name}/` directories mirror tagged releases and must not be
 edited as source.
+
+## Triggers
+
+### Activate when
+
+- 用户要“创建 skill”“封装成 skill”“生成 Skill Kit”或优化 Skill 生成机制。
+- The user asks to scaffold, package, validate, or publish an Agent Skill.
+- 用户要把 Skill 或 Skill Kit 适配到腾讯 WorkBuddy。
+
+### Do not activate when
+
+- 用户只是调用一个现有 Skill 完成业务任务，而不是创建或维护 Skill 本身。
 
 ## Architecture
 
@@ -54,7 +56,10 @@ edited as source.
 │       ├── SKILL.md
 │       ├── README.md
 │       ├── CHANGELOG.md           ← managed by skill-optimizer
+│       ├── kit.yaml                ← optional, for a self-contained Skill Kit
 │       ├── scripts/               ← standalone Python CLI scripts
+│       ├── skills/                 ← embedded kit modules
+│       ├── workbuddy/              ← optional platform distribution metadata
 │       └── references/            ← optional progressive-disclosure docs
 └── ...
 
@@ -72,10 +77,12 @@ Key facts:
 - Frontmatter `name`: `lovstudio-{name}` (Agent Skills-compatible). Legacy
   namespace-style names are kept only for older skills and should not be copied
   into new templates.
-- Frontmatter `depends_on`: optional list of required skill names from those
-  skills' own `SKILL.md` frontmatter. Use it when one skill must reuse another
-  instead of duplicating implementation. In `skills.yaml`, use catalog names
-  such as `find-logo`.
+- Source frontmatter uses only Agent Skills-compatible top-level fields.
+  Compatibility and dependency declarations live under `metadata`.
+- A required dependency must be embedded in a Skill Kit before a WorkBuddy
+  release. `kit.yaml` is the module/path/pipeline contract.
+- WorkBuddy-only fields (`version`, `author`, `source_type`, and a source
+  locator) are injected into the distribution copy, not the source SKILL.md.
 - `paid: true/false` lives **only** in `lovstudio-general-skills/skills.yaml`, never in SKILL.md
 - User-specific paths, brand profiles, design guides, and output directories
   must be initialized through explicit CLI flags, environment variables, or
@@ -120,67 +127,47 @@ you can't infer from the initial request.
 - 2-3 个具体使用示例
 - 触发短语(中文 + English)
 
-#### Q2.5. Decompose into protected vs public layers  ⟵ MANDATORY, do not skip
+#### Q2.5. Public/protected decomposition — mandatory
 
-Before any file is created, **decompose the skill** into two layers and **show
-the user the decomposition** for confirmation. This step catches two common
-failures: (a) cloud-split chosen with empty protected layer (over-engineering),
-(b) encrypted chosen but real secrets exist (under-protection).
+Before creating files, show:
 
-Present like this:
+- **Public layer**: conversation flow, input parsing, output rendering, errors.
+- **Protected layer**: algorithms, thresholds, rules, prompts, keys, or data;
+  explicitly say “none” when empty.
 
-> 我先拆解一下这个 skill 的结构:
->
-> **公开层(瘦客户端 SKILL.md 会暴露这些)**:
-> - [具体列出:对话流、输入解析、输出渲染、错误处理]
->
-> **保护层(需要藏起来的)**:
-> - [具体列出:算法/阈值/规则/prompt 工程/密钥/数据]
-> - 或明确写 "**无** — 这个 skill 没有需要保护的核心逻辑"
->
-> 按这个拆解,你选的 [Q1 答案] [合理 / 不合理,建议改成 X]。确认继续?
+Free accepts either shape. Encrypted is suitable for paid workflows whose
+plaintext is not sensitive. Cloud-split requires a substantive protected layer;
+read `references/cloud-split.md` for its full consistency and preflight rules.
 
-**Consistency check** — if decomposition contradicts Q1, challenge it:
-
-| Q1 选择 | 保护层内容 | 判断 |
-|---|---|---|
-| Free | 任何 | ✓ 无需保护问题 |
-| Encrypted | 非空 | ⚠️ 警告:encrypted 不防 L2 grep,真敏感的请升级 cloud-split |
-| Encrypted | 空 | ✓ 合理(典型场景:付费模板/工作流) |
-| Cloud-split | 非空且有实质 | ✓ 合理 |
-| **Cloud-split** | **空或琐碎** | ✗ **停下,反问用户是否过度设计,建议降级到 encrypted 或 free** |
-
-对琐碎 demo(如"两数之和")尤其要质询 —— cloud-split 的服务端成本 + 部署复杂度
-对"其实没东西可保护"的 skill 是净负收益。除非用户明确说"做模板/教学样本",
-否则建议降级。
-
-#### Q2.7. Naming — de-business the name  ⟵ MANDATORY for paid skills
-
-Bad naming leaks the logic through the API surface. Even with cloud-split, if
-the skill name + op name + input schema together describe the business logic,
-`grep` on jsonl reveals intent.
-
-**Rule**: name the **capability domain**, not the **specific logic**.
-
-| ✗ 逻辑自述(坏) | ✓ 能力域(好) |
-|---|---|
-| `sum-gt-ten` | `threshold-check` |
-| `extract-chinese-poem-style` | `text-style-analyzer` |
-| `detect-viral-headline` | `text-scorer` |
-| `calculate-compatibility` | `profile-matcher` |
-
-Propose 2-3 de-businessed names and let the user pick via AskUserQuestion.
-For the **op** names inside the handler, same rule — `op: "score"` beats
-`op: "check_if_sum_exceeds_10"`.
-
-Skip this step only if Q1 == Free and the user doesn't care about future
-paid upgrades.
+For paid skills, name the capability domain instead of narrating the logic:
+prefer `text-scorer` over `detect-viral-headline`, and `score` over
+`check_if_headline_is_viral`.
 
 #### Q3. Implementation type
 - 纯指令 SKILL.md,还是需要 Python CLI 脚本?
 - (如果 Q1 选了 3:这一问跳过。cloud-split 的"实现"就是云端 handler,不是本地脚本。)
 
-#### Q4. User initialization layer — mandatory for reusable skills
+Also decide the composition:
+
+- **Single Skill** — one focused workflow.
+- **Skill Kit** — a controller plus two or more embedded modules and named
+  pipelines. List the modules and their order before scaffolding.
+
+For a Skill Kit, use `--kit` with one `--module` per embedded module. Do not
+leave required modules as external sibling paths.
+
+#### Q4. Distribution target
+
+Ask where the finished Skill will be distributed:
+
+1. **LovStudio source/catalog only** — standard source repository.
+2. **LovStudio + Tencent WorkBuddy** — add platform metadata, CI, a market icon,
+   self-contained ZIP building, and Tencent review gates.
+
+If WorkBuddy is selected, read `references/workbuddy.md` completely before
+scaffolding. Use `--distribution workbuddy`; never hand-assemble the ZIP.
+
+#### Q5. User initialization layer — mandatory for reusable skills
 
 Ask whether the skill needs user-specific workspace, output, identity, brand,
 or design-guide settings. If yes, design the initialization layer before
@@ -196,21 +183,8 @@ Rules:
 - Option 1: no absolute user paths in SKILL.md or scripts.
 - Option 2: follow `references/user-config.md`; use CLI flags > env vars >
   shared profile > safe defaults > ask once.
-- Option 3: mark `compatibility` and README as author-only, and keep all
+- Option 3: mark `metadata.compatibility` and README as author-only, and keep all
   LovStudio paths in one configuration section instead of scattering them.
-
-### Protection model — what each tier actually buys you
-
-Be honest about what each tier protects against. Do not market encrypted skills
-as "IP protection" — it's a gate, not a vault.
-
-| Tier | Protects against | Does NOT protect against |
-|---|---|---|
-| Free | 无 | 无 |
-| Paid / encrypted | 路人 `git clone` 就能用(L1) | 技术用户从本地对话日志取回明文(L2) |
-| Paid / cloud-split | L1 + L2 + 反汇编客户端 | 反向推理 I/O 做劣质 clone |
-
-核心逻辑真正不下发到用户机器的 **只有 cloud-split**。其他 tier 都不要对用户承诺"加密保护"。
 
 ### Step 2: Plan Contents
 
@@ -219,6 +193,8 @@ Analyze the examples and identify:
 1. **Scripts** — deterministic operations → `scripts/`
 2. **References** — domain knowledge Claude needs while working → `references/`
 3. **Assets** — files used in output (templates, fonts, etc.) → `assets/`
+4. **Modules** — independently triggerable workflows → embedded `skills/`
+5. **Distribution metadata** — platform-specific fields → `workbuddy/`
 
 Rules:
 - Python scripts must be **standalone single-file CLIs** with `argparse`
@@ -236,13 +212,31 @@ Run the init script. Independent repo is the default:
 python3 "$SKILL_DIR/scripts/init_skill.py" <name>
 ```
 
+For a WorkBuddy-ready Skill Kit:
+
+```bash
+python3 "$SKILL_DIR/scripts/init_skill.py" <name> \
+  --kit \
+  --module <module-a> \
+  --module <module-b> \
+  --distribution workbuddy
+```
+
+The repository includes source validation in every mode. The WorkBuddy mode
+also generates `workbuddy/connector-meta.json`, `workbuddy/icon.svg`, a
+platform CI workflow, and the self-contained distribution builder.
+
 Independent repo creates `<configured repos root>/{name}-skill/` with:
 
 ```
 {name}-skill/
 ├── SKILL.md          ← frontmatter + TODO workflow
 ├── README.md         ← human-readable docs with version badge
-└── scripts/          ← empty, ready for implementation
+├── scripts/
+│   └── validate_skill.py
+├── kit.yaml          ← only in Skill Kit mode
+├── skills/           ← embedded modules in Skill Kit mode
+└── workbuddy/        ← only with --distribution workbuddy
 ```
 
 Pass `--paid` if this is a paid skill (adjusts README + metadata hints).
@@ -287,6 +281,11 @@ it ships.
    - Never assume personal workspace paths or a fixed agent runtime path in
      reusable workflow steps
    - Keep SKILL.md under 500 lines; split to `references/` if longer
+   - Use standard YAML; source top-level keys are limited to `name`,
+     `description`, `license`, `allowed-tools`, and `metadata`
+   - Keep descriptions between 50 and 200 characters
+   - Add `## Triggers`, activation phrases, and explicit non-trigger conditions
+   - Put compatibility and dependencies under `metadata`
 3. **Write README.md** — docs for humans on GitHub:
    - Version badge (source of truth for version)
    - Install command using the user's chosen agent skills directory
@@ -298,6 +297,26 @@ See `references/templates.md` for SKILL.md / README.md templates.
 See `references/user-config.md` for the portable profile/env contract.
 See `references/skill-standard.md` for the current LovStudio skill standard.
 
+### Step 4.5: Validate and package
+
+Every source repository:
+
+```bash
+python3 scripts/validate_skill.py .
+```
+
+WorkBuddy distributions:
+
+```bash
+python3 scripts/validate_skill.py . --target workbuddy
+python3 scripts/build_workbuddy.py . --output-dir dist/workbuddy
+```
+
+The WorkBuddy build must fail when a module, local reference, case image,
+source locator, trigger section, or required description is missing. It must
+also reject private absolute paths, unresolved TODOs, `__pycache__`, and
+compiled Python artifacts.
+
 ### Step 5: Publish
 
 Always publish the skill's own repository first. Then infer distribution:
@@ -308,6 +327,10 @@ Always publish the skill's own repository first. Then infer distribution:
   `lovstudio/dev-skills`; its checked-in skill directory is a generated mirror
   of the independent release.
 - Do not ask the user where the source should live.
+- For WorkBuddy, submit only the ZIP emitted by `build_workbuddy.py`. Keep
+  source and platform frontmatter separate. For kits, the builder also emits
+  independently installable controller/module ZIPs so users can combine one or
+  more capabilities.
 
 ### Single Source Repository
 
@@ -422,8 +445,11 @@ bundle entry.
 ### Step 6: Test & Iterate
 
 1. In a new conversation, invoke `lovstudio-<name>` or a documented trigger phrase — confirm it triggers
-2. Notice struggles → edit SKILL.md / scripts in the source repo
-3. Commit, tag, and push in the independent source repo; aggregate mirrors are
+2. Invoke at least one documented non-trigger request — confirm it does not hijack the task
+3. For kits, exercise every module and at least one full pipeline
+4. Rebuild the WorkBuddy ZIP from a clean checkout and validate the package
+5. Notice struggles → edit SKILL.md / scripts in the source repo
+6. Commit, tag, and push in the independent source repo; aggregate mirrors are
    updated from releases
 
 ## Design Patterns
@@ -462,6 +488,9 @@ For skills that fill or generate content:
 - Test files — scripts are tested by running, not with test frameworks
 - `__pycache__/`, `*.pyc`, `.DS_Store` — add to `.gitignore`
 - `paid` field in frontmatter — it lives only in `lovstudio-general-skills/skills.yaml`
+- `compatibility`, `depends_on`, `version`, `author`, or WorkBuddy source fields
+  as top-level source frontmatter keys
+- External sibling modules in a release ZIP
 - Hard-coded personal workspace paths or private LovStudio brand files in
   reusable workflows
 

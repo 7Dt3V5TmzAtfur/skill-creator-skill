@@ -8,7 +8,7 @@ specific local machine, workspace, brand, or output path.
 Reusable skills must not depend on Mark's machine layout. Do not scatter these
 values through `SKILL.md`, scripts, or README examples:
 
-- `/Users/mark/...`
+- a personal home-directory absolute path
 - `~/lovstudio/...`
 - private LovStudio web, vault, brand, or design-guide paths
 - `~/.claude/...` as a required runtime path
@@ -69,8 +69,8 @@ Environment variable overrides:
 Replace this:
 
 ```markdown
-Read `/Users/mark/lovstudio/design/design-guide.md`.
-Write output to `/Users/mark/lovstudio/output`.
+Read a design guide from a personal absolute workspace path.
+Write output to a personal absolute workspace path.
 ```
 
 With this:

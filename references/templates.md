@@ -1,179 +1,157 @@
 # Templates
 
-## SKILL.md Template
+`scripts/init_skill.py` is the source of truth for generated files. These
+examples explain the contracts; update the script first when templates change.
+
+## Source SKILL.md
 
 ```yaml
 ---
 name: lovstudio-<name>
 description: >
-  <What it does — 1-2 sentences.>
-  <When to trigger — specific scenarios, file types, user phrases.>
-  Also trigger when the user mentions "<中文触发词>", "<english trigger>".
+  Use 50-200 characters to explain the outcome, supported inputs, and concrete
+  Chinese and English trigger phrases.
 license: MIT
-compatibility: >
-  Portable Agent Skills format. Requires Python 3.8+ and <library>.
-  User-specific paths, brand assets, and workspace settings must come from
-  explicit CLI flags, environment variables, or the shared user profile.
-# Optional: declare required skill-level dependencies by exact SKILL.md
-# frontmatter name. Example:
-# depends_on:
-#   - lovstudio-<other-skill>
 metadata:
   author: lovstudio
   version: "0.1.0"
-  tags: <space-separated tags>
+  tags:
+    - <tag>
+  compatibility: "Portable Agent Skills format. List runtime requirements."
+  dependencies: []
 ---
+```
 
-# <name> — <Short Title>
+The source top level is intentionally limited to Agent Skills-compatible keys:
 
-<1-2 sentence overview.>
+- `name`
+- `description`
+- `license`
+- `allowed-tools`
+- `metadata`
 
-## User Configuration
+Place compatibility and required dependencies under `metadata`. Platform-only
+fields are generated into distribution copies.
 
-This skill must not assume Mark's local workspace, `~/lovstudio`,
-`/Users/mark`, or a fixed Claude install path. If user-specific paths or brand
-settings are needed, follow `references/user-config.md`.
+Required body sections:
 
-## When to Use
+```markdown
+# <Outcome-focused title>
 
-- <Scenario 1>
-- <Scenario 2>
+## Triggers
+
+### Activate when
+
+- <Chinese user phrase>
+- <English user phrase>
+
+### Do not activate when
+
+- <Adjacent task that belongs elsewhere>
 
 ## Workflow (MANDATORY)
 
-### Step 0: Resolve skill root and user config
+### Step 0: Resolve skill root, dependencies, and user config
+
+Verify every required module, reference, script, and asset before execution.
+If anything is missing, name the expected relative path and stop before
+producing a partial result.
+```
+
+## Skill Kit
+
+Create a kit with:
 
 ```bash
-SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills/lovstudio-<name>}"
+python3 scripts/init_skill.py <name> \
+  --kit \
+  --module <module-a> \
+  --module <module-b>
 ```
 
-If user-specific fields are missing, ask once and map the answer to CLI flags,
-environment variables, or the shared profile described in
-`references/user-config.md`.
+The generated `kit.yaml` is the machine-readable contract:
 
-### Step 1: <First action>
+```yaml
+name: <name>
+display_name: "<display name>"
+version: "0.1.0"
+entrypoint: lovstudio-<name>
+modules:
+  - id: <module-a>
+    skill: lovstudio-<module-a>
+    path: skills/<module-a>
+pipelines:
+  full:
+    - <module-a>
+```
+
+Every `modules[].path` must contain a `SKILL.md` inside the same source
+repository and release archive.
+
+## WorkBuddy distribution
+
+Create the platform profile with:
 
 ```bash
-python3 "$SKILL_DIR/scripts/<script>.py" --flag value
+python3 scripts/init_skill.py <name> --distribution workbuddy
 ```
 
-### Step 2: Ask the user
-
-**Use `AskUserQuestion` to collect options BEFORE running.**
-
-### Step 3: Execute
-
-```bash
-python3 "$SKILL_DIR/scripts/<script>.py" --input <path> --output <path>
-```
-
-## CLI Reference
-
-| Argument | Default | Description |
-|----------|---------|-------------|
-| `--input` | (required) | ... |
-| `--output` | `output.ext` | ... |
-
-## Dependencies
-
-```bash
-pip install <library> --break-system-packages
-```
-```
-
-## README.md Template
-
-```markdown
-# lovstudio-<name>
-
-![Version](https://img.shields.io/badge/version-0.1.0-CC785C)
-
-<One-line description.>
-
-Part of [lovstudio general skills](https://github.com/lovstudio/general-skills) — by [lovstudio.ai](https://lovstudio.ai)
-
-## Install
-
-```bash
-git clone https://github.com/lovstudio/<name>-skill "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}/lovstudio-<name>"
-```
-
-Requires: Python 3.8+ and `pip install <library>`
-
-## Configuration
-
-This skill is portable by default. User-specific paths and brand settings should
-be provided through CLI flags, environment variables, or:
-
-```bash
-${LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}
-```
-
-See `references/user-config.md`.
-
-## Usage
-
-```bash
-SKILL_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}/lovstudio-<name>"
-python3 "$SKILL_DIR/scripts/<script>.py" --input file.ext --output result.ext
-```
-
-## Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--input` | (required) | ... |
-| `--output` | `output.ext` | ... |
-
-## License
-
-MIT
-```
-
-## Optional Dev-Skills Aggregate Install Block
-
-Add this as a secondary install option when an independently versioned Meta /
-Dev Tools skill is mirrored into `lovstudio/dev-skills`. Keep the independent
-repository install as the primary source install:
-
-~~~markdown
-## Install
-
-```bash
-npx skills add lovstudio/dev-skills
-```
-
-Or through Claude Code plugin marketplace:
+Or combine it with Skill Kit flags. Generated platform files:
 
 ```text
-/plugin marketplace add lovstudio/dev-skills
-/plugin install dev-tools@lovstudio-dev
+workbuddy/
+├── connector-meta.json
+├── icon.svg
+└── README.md
+scripts/
+├── validate_skill.py
+└── build_workbuddy.py
 ```
-~~~
+
+The source `SKILL.md` remains portable. The builder creates a distribution copy
+whose frontmatter includes:
+
+```yaml
+---
+name: lovstudio-<name>
+description: <50-200 character Skill description>
+version: "0.1.0"
+author: lovstudio
+source_type: git
+git_url: https://github.com/lovstudio/<name>-skill
+---
+```
+
+Build only after both gates pass:
+
+```bash
+python3 scripts/validate_skill.py .
+python3 scripts/validate_skill.py . --target workbuddy
+python3 scripts/build_workbuddy.py . --output-dir dist/workbuddy
+```
+
+The build emits a combined Connector ZIP and `dist/workbuddy-individual/*.zip`
+for users who want only the controller or one module.
+
+## README.md
+
+Every LovStudio source repository includes:
+
+- Version badge matching `metadata.version`
+- User-outcome description
+- Install and configuration instructions
+- Usage example
+- Source and platform quality-gate commands
+- MIT license section
 
 ## Notes
 
-- Source repository placement is not a user choice. Always scaffold and publish
-  `lovstudio/<name>-skill`; catalogs and bundles are downstream distribution
-  indexes.
-- Version source of truth: `README.md` badge. `SKILL.md` frontmatter
-  `metadata.version` is kept in sync by `skill-optimizer`.
-- New skills use Agent Skills-compatible frontmatter names:
-  `lovstudio-<name>`. Legacy namespace-style names should be migrated
-  opportunistically, not copied into new templates.
-- User-specific paths, workspaces, brand profiles, and design guides must be
-  initialized through `references/user-config.md`, environment variables, or
-  CLI flags. Do not hard-code `/Users/mark`, `~/lovstudio`, or private
-  LovStudio workspace paths in reusable workflow steps.
-- Start at `0.1.0`, not `1.0.0` — per repo release conventions (stay in 0.x
-  unless explicitly promoted).
-- `paid` is **not** in SKILL.md frontmatter. It lives only in
-  `~/lovstudio/coding/lovstudio-general-skills/skills.yaml`.
-- `depends_on` may appear in SKILL.md frontmatter when a skill requires another
-  skill. Use the dependency skill's exact SKILL.md `name`; when registering the
-  same relationship in `skills.yaml`, use the catalog skill name.
-- Dev-skills entries use `repo: lovstudio/<name>-skill`; the aggregate mirror
-  path is generated from the latest release by the dev-skills sync workflow.
-- Publication is complete only after `https://lovstudio.ai/skills/<name>`
-  returns HTTP 200 with the released version and current content. Catalog
-  registration, cache revalidation, and live verification are mandatory.
+- Source repository: `lovstudio/<name>-skill`.
+- Installed directory and source frontmatter name: `lovstudio-<name>`.
+- Start at `0.1.0`.
+- `paid` lives only in `lovstudio/general-skills` catalog metadata.
+- `__pycache__`, `*.pyc`, `*.pyo`, `.DS_Store`, private absolute paths, and
+  unresolved TODOs never enter a release.
+- Publication completes only after the tagged source, catalog, live
+  `lovstudio.ai/skills/<name>` page, and any platform ZIP are independently
+  verified.

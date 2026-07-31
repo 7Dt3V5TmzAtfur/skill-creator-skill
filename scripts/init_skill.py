@@ -1,53 +1,47 @@
 #!/usr/bin/env python3
-"""
-Initialize a new lovstudio skill scaffold.
+"""Initialize a release-ready LovStudio Skill or Skill Kit source repository."""
 
-Usage:
-    python3 init_skill.py <name>
-    python3 init_skill.py <name> --paid
-    python3 init_skill.py <name> --path /custom/path
-
-Examples:
-    python3 init_skill.py fill-form
-        → <configured repos root>/fill-form-skill/
-    python3 init_skill.py any2pptx
-        → <configured repos root>/any2pptx-skill/
-Default base directories resolve from --path, LOVSTUDIO_SKILL_CREATOR_* env
-vars, the shared profile JSON, then a safe current-directory fallback.
-"""
+from __future__ import annotations
 
 import argparse
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
-SKILL_MD = '''---
+
+SKILL_MD = """---
 name: lovstudio-{name}
 description: >
-  TODO: What this skill does (1-2 sentences).
-  TODO: When to trigger — specific scenarios, file types, user phrases.
-  Also trigger when the user mentions "TODO_CN", "TODO_EN".
+  TODO：用 50–200 个字符说明这个 Skill 能完成什么、适用于哪些输入或任务，
+  并自然包含用户会说出的中文与 English 触发语句。
 license: MIT
-compatibility: >
-  Portable Agent Skills format. TODO: Requires Python 3.8+ and <library>.
-  User-specific paths, brand assets, and workspace settings must come from
-  explicit CLI flags, environment variables, or the shared user profile.
-# Optional: declare required skill-level dependencies by exact SKILL.md
-# frontmatter name. Example:
-# depends_on:
-#   - lovstudio-<other-skill>
 metadata:
   author: lovstudio
   version: "0.1.0"
-  tags: TODO
+  tags:
+    - TODO
+  compatibility: "Portable Agent Skills format. TODO: list runtime requirements."
+  dependencies: []
 ---
 
-# {name} — TODO: Short Title
+# {title}
 
-TODO: 1-2 sentence overview.
+TODO：用一到两句话说明用户得到的结果，不要把内部背景或实现细节写进用户制品。
+
+## Triggers
+
+### Activate when
+
+- TODO：列出明确中文触发语，例如“帮我……”
+- TODO: list an explicit English trigger phrase.
+
+### Do not activate when
+
+- TODO：列出相邻但不属于本 Skill 的任务，并说明应交给什么能力。
 
 ## User Configuration
 
@@ -55,20 +49,19 @@ This skill must not assume a private workspace, personal absolute paths, or a
 fixed agent runtime path. If user-specific paths or brand settings are needed,
 follow `references/user-config.md`.
 
-## When to Use
+{kit_section}## Workflow (MANDATORY)
 
-- TODO: Scenario 1
-- TODO: Scenario 2
+**You MUST follow these steps in order.**
 
-## Workflow (MANDATORY)
-
-**You MUST follow these steps in order:**
-
-### Step 0: Resolve skill root and user config
+### Step 0: Resolve skill root, dependencies, and user config
 
 - Use `SKILL_DIR` if the environment provides it.
 - Otherwise infer the installed skill directory from the current skill context.
-- When running scripts manually, set it explicitly:
+- Verify every required local module, reference, script, and asset before work.
+- If a required resource is missing, name its expected relative path and stop
+  before producing a partial result.
+
+When running scripts manually:
 
 ```bash
 export SKILL_DIR="/path/to/lovstudio-{name}"
@@ -78,43 +71,56 @@ If user-specific fields are missing, ask once and map the answer to CLI flags,
 environment variables, or the shared profile described in
 `references/user-config.md`.
 
-### Step 1: TODO
+### Step 1: Understand the requested outcome
+
+- Separate internal context from user-visible output.
+- Confirm the input, intended audience, expected deliverable, and evidence gaps.
+
+### Step 2: Execute the deterministic workflow
 
 ```bash
-python3 "$SKILL_DIR/scripts/TODO.py" --help
+python3 "$SKILL_DIR/scripts/TODO.py" --input INPUT --output OUTPUT
 ```
 
-### Step 2: Ask the user when needed
+### Step 3: Validate the deliverable
 
-**IMPORTANT: Use `AskUserQuestion` to collect options BEFORE running.**
-
-### Step 3: Execute
-
-```bash
-python3 "$SKILL_DIR/scripts/TODO.py" --input <path> --output <path>
-```
+- Verify completeness, factual support, user-visible copy, and output paths.
+- Report concrete files or results, plus any remaining evidence gaps.
 
 ## CLI Reference
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `--input` | (required) | TODO |
+| `--input` | required | TODO |
 | `--output` | `output.ext` | TODO |
 
 ## Dependencies
 
-```bash
-pip install TODO --break-system-packages
-```
-'''
+Runtime dependencies:
 
-README_MD = '''# lovstudio-{name}
+```bash
+pip install TODO
+```
+"""
+
+KIT_SECTION = """## Skill Kit Modules
+
+This repository is a self-contained Skill Kit. At Step 0, load and verify:
+
+{module_lines}
+
+`kit.yaml` is the machine-readable module and pipeline manifest. Every module
+listed there must ship inside this repository and every release archive.
+
+"""
+
+README_MD = """# lovstudio-{name}
 
 ![Version](https://img.shields.io/badge/version-0.1.0-CC785C)
 
-TODO: One-line description.
+TODO: One-line description focused on the user's outcome.
 
-Part of [lovstudio general skills](https://github.com/lovstudio/general-skills) — by [lovstudio.ai](https://lovstudio.ai)
+Part of [LovStudio Skills](https://lovstudio.ai/skills) — by [lovstudio.ai](https://lovstudio.ai)
 
 ## Install
 
@@ -122,12 +128,10 @@ Part of [lovstudio general skills](https://github.com/lovstudio/general-skills) 
 git clone https://github.com/lovstudio/{name}-skill "${{LOVSTUDIO_SKILLS_INSTALL_DIR:?Set LOVSTUDIO_SKILLS_INSTALL_DIR}}/lovstudio-{name}"
 ```
 
-Requires: Python 3.8+ and `pip install TODO`
-
 ## Configuration
 
-This skill is portable by default. User-specific paths and brand settings should
-be provided through CLI flags, environment variables, or:
+This skill is portable by default. User-specific paths and brand settings
+should be provided through CLI flags, environment variables, or:
 
 ```bash
 ${{LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}}
@@ -139,22 +143,103 @@ See `references/user-config.md`.
 
 ```bash
 SKILL_DIR="${{LOVSTUDIO_SKILLS_INSTALL_DIR:?Set LOVSTUDIO_SKILLS_INSTALL_DIR}}/lovstudio-{name}"
-python3 "$SKILL_DIR/scripts/TODO.py" --input file.ext --output result.ext
+python3 "$SKILL_DIR/scripts/TODO.py" --input INPUT --output OUTPUT
 ```
 
-## Options
+## Quality Gate
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--input` | (required) | TODO |
-| `--output` | `output.ext` | TODO |
+```bash
+python3 scripts/validate_skill.py .
+{workbuddy_validation}
+```
 
 ## License
 
 MIT
-'''
+"""
 
-GITIGNORE = '''__pycache__/
+KIT_YAML = """name: {name}
+display_name: "TODO"
+version: "0.1.0"
+entrypoint: lovstudio-{name}
+modules:
+{module_entries}
+pipelines:
+  full:
+{pipeline_entries}
+"""
+
+WORKBUDDY_META = """{{
+  "name": "TODO",
+  "name_zh": "TODO",
+  "name_en": "TODO",
+  "description": "TODO: concise default description.",
+  "description_zh": "TODO：用 20–100 个字符说明核心能力和用户结果。",
+  "description_en": "TODO: describe the core capability and user outcome in 20-100 characters.",
+  "source": "lovstudio-{name}",
+  "type": "skill-only",
+  "version": "0.1.0",
+  "source_type": "git",
+  "git_url": "https://github.com/lovstudio/{name}-skill",
+  "minWorkbuddyVersion": "4.24.0",
+  "examples_zh": [
+    "TODO：提供一个真实的中文使用示例",
+    "TODO：提供第二个不同场景的中文使用示例"
+  ],
+  "examples_en": [
+    "TODO: provide one realistic English usage example",
+    "TODO: provide a second English usage example"
+  ]
+}}
+"""
+
+WORKBUDDY_README = """# WorkBuddy distribution
+
+This directory contains platform metadata and the market icon. Before building:
+
+1. Replace every `TODO` in `connector-meta.json`.
+2. Replace `icon.svg` with the final 64×64 brand icon if needed.
+3. Ensure every Skill description is 50–200 characters.
+4. Run the source and WorkBuddy validation commands from the repository root.
+
+Build a self-contained upload ZIP:
+
+```bash
+python3 scripts/build_workbuddy.py . --output-dir dist/workbuddy
+```
+
+The builder injects WorkBuddy-only frontmatter fields into the distribution
+copy, bundles every `kit.yaml` module, rejects broken local references and
+removes generated cache files. It emits one combined Connector ZIP plus one
+independently installable ZIP for the controller and every module.
+"""
+
+WORKBUDDY_ICON = """<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#0B5D43"/>
+  <path d="M18 19h9l5 9 5-9h9L35 45h-6L18 19Z" fill="#F7F4EC"/>
+</svg>
+"""
+
+WORKBUDDY_WORKFLOW = """name: Validate WorkBuddy distribution
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate-workbuddy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install PyYAML
+      - run: python scripts/validate_skill.py . --target workbuddy
+      - run: python scripts/build_workbuddy.py . --output-dir dist/workbuddy
+"""
+
+GITIGNORE = """__pycache__/
 *.pyc
 *.pyo
 .DS_Store
@@ -163,9 +248,10 @@ venv/
 node_modules/
 .env
 .env.local
-'''
+dist/
+"""
 
-LICENSE_MD = '''MIT License
+LICENSE_MD = """MIT License
 
 Copyright (c) 2026 LovStudio
 
@@ -186,31 +272,40 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
-CHANGELOG_MD = '''# Changelog
+CHANGELOG_MD = """# Changelog
 
 ## 0.1.0
 
 - Initial independent skill release.
-'''
+"""
 
-VALIDATE_WORKFLOW = '''name: Validate skill
+VALIDATE_WORKFLOW = """name: Validate skill
 
 on:
   push:
   pull_request:
 
 jobs:
-  validate:
+  validate-agent-skills:
     uses: lovstudio/dev-skills/.github/workflows/validate-skill.yml@main
     with:
       skill_name: lovstudio-{name}
-'''
+  validate-lovstudio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install PyYAML
+      - run: python scripts/validate_skill.py .
+"""
 
-USER_CONFIG_MD = '''# User Configuration
+USER_CONFIG_MD = """# User Configuration
 
-This skill follows the portable agent skill profile contract. It must not
+This skill follows the portable Agent Skill profile contract. It must not
 assume a private workspace, personal absolute paths, or private brand assets.
 
 ## Resolution Order
@@ -244,30 +339,11 @@ Example:
   }},
   "brand": {{
     "name": "Your Brand",
-    "site": "https://example.com",
-    "profile": "$HOME/.lovstudio/skills/brand.json",
-    "design_guide": "$HOME/.lovstudio/skills/design-guide.md"
+    "site": "https://example.com"
   }}
 }}
 ```
-
-Environment variable overrides:
-
-| Variable | Meaning |
-|----------|---------|
-| `LOVSTUDIO_SKILLS_PROFILE` | Path to the shared profile JSON |
-| `LOVSTUDIO_SKILLS_HOME` | Shared LovStudio skills config/data directory |
-| `LOVSTUDIO_SKILLS_WORKSPACE_ROOT` | User workspace root |
-| `LOVSTUDIO_SKILLS_OUTPUT_DIR` | Default generated output directory |
-| `LOVSTUDIO_SKILLS_BRAND_PROFILE` | Brand profile JSON or Markdown |
-| `LOVSTUDIO_SKILLS_DESIGN_GUIDE` | Design guide path |
-
-## Implementation Notes
-
-- Scripts should accept explicit paths via CLI flags.
-- Missing profile fields should produce actionable errors.
-- LovStudio maintainer defaults belong in an optional profile, not in the workflow.
-'''
+"""
 
 
 def _expand_path(value: str) -> Path:
@@ -291,7 +367,7 @@ def _load_profile() -> Tuple[Path, dict]:
     if not profile.exists():
         return profile, {}
     try:
-        return profile, json.loads(profile.read_text())
+        return profile, json.loads(profile.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         print(f"ERROR: invalid JSON in {profile}: {exc}", file=sys.stderr)
         sys.exit(1)
@@ -308,100 +384,203 @@ def _profile_first(data: dict, keys: Tuple[str, ...]) -> Optional[str]:
 def resolve_base(cli_path: str) -> Path:
     if cli_path:
         return _expand_path(cli_path)
-
     _, profile = _load_profile()
-    env_key = "LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"
-    profile_keys = (
-        "lovstudio.skill_repos_root",
-        "skills.repos_root",
-        "workspace.skill_repos_root",
-        "workspace.skills_root",
-    )
-
-    if os.environ.get(env_key):
-        return _expand_path(os.environ[env_key])
-
-    profile_value = _profile_first(profile, profile_keys)
-    if profile_value:
-        return _expand_path(profile_value)
-
-    return Path.cwd()
-
-
-def main():
-    ap = argparse.ArgumentParser(
-        description=(
-            "Initialize a new independent lovstudio/{name}-skill source repository"
-        )
-    )
-    ap.add_argument("name", help="Skill short name (no prefix / no -skill suffix)")
-    ap.add_argument(
-        "--path",
-        default="",
-        help=(
-            "Custom base directory. Defaults resolve from LOVSTUDIO_SKILL_CREATOR_* env, "
-            "the shared profile JSON, then a safe current-directory fallback."
+    if os.environ.get("LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"):
+        return _expand_path(os.environ["LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"])
+    profile_value = _profile_first(
+        profile,
+        (
+            "lovstudio.skill_repos_root",
+            "skills.repos_root",
+            "workspace.skill_repos_root",
+            "workspace.skills_root",
         ),
     )
-    ap.add_argument("--paid", action="store_true", help="Mark as paid in hints (actual paid flag lives in lovstudio-general-skills/skills.yaml)")
-    args = ap.parse_args()
+    return _expand_path(profile_value) if profile_value else Path.cwd()
 
-    # Normalize: strip common prefixes / suffix users might paste
-    name = args.name
-    for pfx in ("lovstudio-",):
-        if name.startswith(pfx):
-            name = name[len(pfx):]
+
+def normalize_name(value: str) -> str:
+    name = value
+    if name.startswith("lovstudio-"):
+        name = name[len("lovstudio-") :]
     if name.endswith("-skill"):
         name = name[: -len("-skill")]
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
+        raise ValueError(
+            "skill name must use lowercase letters, numbers, and single hyphens only"
+        )
+    return name
+
+
+def write_skill(path: Path, name: str, kit_section: str = "") -> None:
+    path.write_text(
+        SKILL_MD.format(
+            name=name,
+            title=f"lovstudio-{name} — TODO",
+            kit_section=kit_section,
+        ),
+        encoding="utf-8",
+    )
+
+
+def render_kit(name: str, modules: list[str]) -> tuple[str, str]:
+    module_lines = "\n".join(
+        f"- `$SKILL_DIR/skills/{module}/SKILL.md` — `lovstudio-{module}`"
+        for module in modules
+    )
+    module_entries = "\n".join(
+        "  - id: {module}\n"
+        "    skill: lovstudio-{module}\n"
+        "    path: skills/{module}".format(module=module)
+        for module in modules
+    )
+    pipeline_entries = "\n".join(f"    - {module}" for module in modules)
+    return (
+        KIT_SECTION.format(module_lines=module_lines),
+        KIT_YAML.format(
+            name=name,
+            module_entries=module_entries,
+            pipeline_entries=pipeline_entries,
+        ),
+    )
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Initialize a LovStudio Skill or self-contained Skill Kit."
+    )
+    parser.add_argument("name", help="Short name without lovstudio- or -skill")
+    parser.add_argument("--path", default="", help="Custom parent directory")
+    parser.add_argument("--paid", action="store_true", help="Use private repo hint")
+    parser.add_argument(
+        "--kit",
+        action="store_true",
+        help="Create a Skill Kit controller and embedded child modules",
+    )
+    parser.add_argument(
+        "--module",
+        action="append",
+        default=[],
+        help="Embedded module short name; repeat for each module (requires --kit)",
+    )
+    parser.add_argument(
+        "--distribution",
+        choices=("source", "workbuddy"),
+        default="source",
+        help="Add a platform distribution profile (default: source only)",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        name = normalize_name(args.name)
+        modules = [normalize_name(module) for module in args.module]
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    if args.module and not args.kit:
+        print("ERROR: --module requires --kit", file=sys.stderr)
+        return 1
+    if args.kit and not modules:
+        print("ERROR: --kit requires at least one --module", file=sys.stderr)
+        return 1
+    if len(set(modules)) != len(modules):
+        print("ERROR: module names must be unique", file=sys.stderr)
+        return 1
+    if name in modules:
         print(
-            "ERROR: skill name must use lowercase letters, numbers, and single hyphens only",
+            "ERROR: a module name must differ from the controller name",
             file=sys.stderr,
         )
-        sys.exit(1)
+        return 1
 
     base = resolve_base(args.path)
     base.mkdir(parents=True, exist_ok=True)
     skill_dir = base / f"{name}-skill"
-
     if skill_dir.exists():
         print(f"ERROR: {skill_dir} already exists", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
     skill_dir.mkdir()
-    (skill_dir / "scripts").mkdir()
-    (skill_dir / "references").mkdir()
-    (skill_dir / ".github" / "workflows").mkdir(parents=True)
+    for directory in ("scripts", "references", ".github/workflows"):
+        (skill_dir / directory).mkdir(parents=True, exist_ok=True)
 
-    (skill_dir / "SKILL.md").write_text(SKILL_MD.format(name=name))
-    (skill_dir / "README.md").write_text(README_MD.format(name=name))
-    (skill_dir / "references" / "user-config.md").write_text(USER_CONFIG_MD.format(name=name))
-    (skill_dir / ".gitignore").write_text(GITIGNORE)
-    (skill_dir / "LICENSE").write_text(LICENSE_MD)
-    (skill_dir / "CHANGELOG.md").write_text(CHANGELOG_MD)
+    kit_section = ""
+    if args.kit:
+        kit_section, kit_text = render_kit(name, modules)
+        (skill_dir / "kit.yaml").write_text(kit_text, encoding="utf-8")
+        for module in modules:
+            module_dir = skill_dir / "skills" / module
+            module_dir.mkdir(parents=True)
+            write_skill(module_dir / "SKILL.md", module)
+
+    write_skill(skill_dir / "SKILL.md", name, kit_section)
+    workbuddy_validation = ""
+    if args.distribution == "workbuddy":
+        workbuddy_validation = (
+            "python3 scripts/validate_skill.py . --target workbuddy\n"
+            "python3 scripts/build_workbuddy.py . --output-dir dist/workbuddy"
+        )
+    (skill_dir / "README.md").write_text(
+        README_MD.format(
+            name=name,
+            workbuddy_validation=workbuddy_validation,
+        ),
+        encoding="utf-8",
+    )
+    (skill_dir / "references" / "user-config.md").write_text(
+        USER_CONFIG_MD, encoding="utf-8"
+    )
+    (skill_dir / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
+    (skill_dir / "LICENSE").write_text(LICENSE_MD, encoding="utf-8")
+    (skill_dir / "CHANGELOG.md").write_text(CHANGELOG_MD, encoding="utf-8")
     (skill_dir / ".github" / "workflows" / "validate.yml").write_text(
-        VALIDATE_WORKFLOW.format(name=name)
+        VALIDATE_WORKFLOW.format(name=name), encoding="utf-8"
     )
 
-    print(f"✓ Created {skill_dir}/")
-    print(f"  SKILL.md      — AI-facing frontmatter + workflow")
-    print(f"  README.md     — human-facing GitHub docs")
-    print(f"  references/   — user configuration contract")
-    print(f"  scripts/      — add Python CLI scripts here")
-    print(f"  .gitignore")
+    script_root = Path(__file__).resolve().parent
+    shutil.copy2(script_root / "validate_skill.py", skill_dir / "scripts")
+    if args.distribution == "workbuddy":
+        workbuddy_dir = skill_dir / "workbuddy"
+        workbuddy_dir.mkdir()
+        (workbuddy_dir / "connector-meta.json").write_text(
+            WORKBUDDY_META.format(name=name), encoding="utf-8"
+        )
+        (workbuddy_dir / "icon.svg").write_text(WORKBUDDY_ICON, encoding="utf-8")
+        (workbuddy_dir / "README.md").write_text(
+            WORKBUDDY_README, encoding="utf-8"
+        )
+        shutil.copy2(script_root / "build_workbuddy.py", skill_dir / "scripts")
+        (skill_dir / ".github" / "workflows" / "workbuddy.yml").write_text(
+            WORKBUDDY_WORKFLOW, encoding="utf-8"
+        )
+
+    kind = "Skill Kit" if args.kit else "Skill"
+    print(f"✓ Created {kind}: {skill_dir}/")
+    print("  Source validation: python3 scripts/validate_skill.py .")
+    if args.distribution == "workbuddy":
+        print(
+            "  WorkBuddy gate: python3 scripts/validate_skill.py . --target workbuddy"
+        )
+        print(
+            "  WorkBuddy ZIP:  python3 scripts/build_workbuddy.py . "
+            "--output-dir dist/workbuddy"
+        )
     print()
     print("Next steps:")
-    print(f"  1. cd {skill_dir}")
-    print(f"  2. Implement scripts/ and fill TODO placeholders in SKILL.md / README.md")
-    print(f"  3. git init && git add -A && git commit -m 'feat: initial release of {name} skill'")
+    print("  1. Replace every TODO and implement the workflow")
+    print("  2. Run the quality gates until all checks pass")
+    print("  3. git init && git add -A && git commit -m 'feat: initial release'")
     visibility = "--private" if args.paid else "--public"
-    print(f"  4. gh repo create lovstudio/{name}-skill {visibility} --source=. --push")
-    print(f"  5. Tag and publish v0.1.0 so aggregate mirrors can sync the release")
-    print(f"  6. Install or symlink {skill_dir} into your agent's skills directory as lovstudio-{name}")
-    paid_flag = "true" if args.paid else "false"
-    print(f"  7. Register in the appropriate catalog (paid: {paid_flag})")
-    print(f"  8. Revalidate and verify https://lovstudio.ai/skills/{name}")
+    print(
+        f"  4. gh repo create lovstudio/{name}-skill {visibility} --source=. --push"
+    )
+    print("  5. Tag v0.1.0, register the catalog, and verify lovstudio.ai")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

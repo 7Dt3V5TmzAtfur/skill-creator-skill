@@ -1,106 +1,106 @@
 # lovstudio-skill-creator
 
-![Version](https://img.shields.io/badge/version-2.9.1-CC785C)
+![Version](https://img.shields.io/badge/version-3.0.0-CC785C)
 
-Scaffold new skills for the lovstudio ecosystem as **independent GitHub repos**
-at `lovstudio/{name}-skill`. [`lovstudio/dev-skills`](https://github.com/lovstudio/dev-skills)
-is a generated distribution mirror, not a source repository.
-New scaffolds use Agent Skills-compatible `lovstudio-<name>` frontmatter and a
-portable user configuration layer for workspace, output, and brand settings.
-There is no repository-target prompt: every source is created at
-`lovstudio/{name}-skill`; catalogs and bundles are downstream distribution.
+Scaffold release-ready LovStudio Skills and self-contained Skill Kits as
+independent GitHub repositories. The v3 workflow separates portable source
+metadata from platform distributions, validates routing and dependencies, and
+builds Tencent WorkBuddy upload ZIPs without manual assembly.
 
-Part of [lovstudio general skills](https://github.com/lovstudio/general-skills) &mdash; by [lovstudio.ai](https://lovstudio.ai)
+Part of [LovStudio Skills](https://lovstudio.ai/skills) — by [lovstudio.ai](https://lovstudio.ai)
 
 ## Install
 
 ```bash
-git clone https://github.com/lovstudio/skill-creator-skill "${LOVSTUDIO_SKILLS_INSTALL_DIR:?Set LOVSTUDIO_SKILLS_INSTALL_DIR}/lovstudio-skill-creator"
-```
-
-## What It Does
-
-```
-┌────────────────────────────────────────────────────────────┐
-│  You: "封装成 wcx skill"                                    │
-└────────────────────────────┬───────────────────────────────┘
-                             │
-                             ▼
-┌────────────────────────────────────────────────────────────┐
-│  init_skill.py wcx                                          │
-│                                                             │
-│  <configured repos root>/wcx-skill/                         │
-│  ├── SKILL.md      ← AI reads this                          │
-│  ├── README.md     ← Humans read this on GitHub             │
-│  ├── .gitignore                                             │
-│  ├── references/user-config.md                               │
-│  └── scripts/      ← Python CLI scripts                     │
-└────────────────────────────┬───────────────────────────────┘
-                             │
-                             ▼
-┌────────────────────────────────────────────────────────────┐
-│  Implement → gh repo create lovstudio/wcx-skill --push      │
-│           → PR into lovstudio-general-skills/skills.yaml + lovstudio-general-skills/README.md     │
-│           → publish at lovstudio.ai/skills/wcx              │
-│           → install or symlink as lovstudio-wcx             │
-└────────────────────────────────────────────────────────────┘
-
+git clone https://github.com/lovstudio/skill-creator-skill \
+  "${LOVSTUDIO_SKILLS_INSTALL_DIR:?Set LOVSTUDIO_SKILLS_INSTALL_DIR}/lovstudio-skill-creator"
 ```
 
 ## Quick Start
 
-```bash
-# Scaffold
-python3 "$SKILL_DIR/scripts/init_skill.py" wcx
+Single portable Skill:
 
-# → <configured repos root>/wcx-skill/
-#     ├── SKILL.md       (TODO placeholders)
-#     ├── README.md      (version badge + install stub)
-#     ├── .gitignore
-#     ├── references/user-config.md
-#     └── scripts/
+```bash
+python3 "$SKILL_DIR/scripts/init_skill.py" wcx
 ```
 
-Then:
+Self-contained Skill Kit for WorkBuddy:
 
-1. Implement `scripts/` and fill the TODOs in `SKILL.md` / `README.md`
-2. `cd <configured repos root>/wcx-skill && git init && git add -A && git commit -m "feat: initial release"`
-3. `gh repo create lovstudio/wcx-skill --public --source=. --push`
-4. Tag and publish a release; Meta / Dev Tools skills can then be registered for automatic mirroring in `lovstudio/dev-skills`
-5. Revalidate and verify `https://lovstudio.ai/skills/wcx`
-6. Install or symlink into your agent skills directory as `lovstudio-<name>`
+```bash
+python3 "$SKILL_DIR/scripts/init_skill.py" bp \
+  --kit \
+  --module bp-outline \
+  --module bp-deck \
+  --module bp-polish \
+  --distribution workbuddy
+```
+
+The second command generates:
+
+```text
+bp-skill/
+├── SKILL.md
+├── README.md
+├── kit.yaml
+├── skills/
+│   ├── bp-outline/SKILL.md
+│   ├── bp-deck/SKILL.md
+│   └── bp-polish/SKILL.md
+├── workbuddy/
+│   ├── connector-meta.json
+│   └── icon.svg
+└── scripts/
+    ├── validate_skill.py
+    └── build_workbuddy.py
+```
+
+Fill the generated placeholders, then:
+
+```bash
+python3 scripts/validate_skill.py .
+python3 scripts/validate_skill.py . --target workbuddy
+python3 scripts/build_workbuddy.py . --output-dir dist/workbuddy
+```
+
+The last command writes a validated, self-contained `dist/workbuddy.zip` and
+individual controller/module ZIPs under `dist/workbuddy-individual/`.
 
 ## Architecture
 
-The lovstudio skill ecosystem:
-
 | Layer | Location | Purpose |
 |-------|----------|---------|
-| General skills index | `lovstudio/general-skills` repo & configured checkout | `skills.yaml` + human README; consumed by agentskills.io and lovstudio.ai/skills |
-| Per-skill repo | `lovstudio/{name}-skill` & configured repos root | All skill code + SKILL.md + README.md + CHANGELOG.md |
-| Dev skills bundle | `lovstudio/dev-skills` & configured checkout | Generated mirrors of independent Meta / Dev Tools releases |
-| Local agent runtime | agent-specific skills directory | Installed or symlinked `lovstudio-{name}` directory |
+| Source repository | `lovstudio/<name>-skill` | Canonical portable Skill or Skill Kit |
+| General catalog | `lovstudio/general-skills` | Public index and commercial metadata |
+| Dev bundle | `lovstudio/dev-skills` | Generated mirror of tagged releases |
+| WorkBuddy profile | `<name>-skill/workbuddy` | Connector metadata and market icon |
+| Agent runtime | Installed `lovstudio-<name>` directory | Local execution |
 
-`paid: true/false` lives **only** in `lovstudio-general-skills/skills.yaml` — never in SKILL.md.
+Every source repository is independent. Catalogs, bundles, marketplace ZIPs,
+and local installs are downstream distributions.
 
-User-specific paths, brand profiles, design guides, and output directories must
-come from explicit CLI flags, environment variables, or
+## Source and Distribution Contract
+
+- Canonical `SKILL.md` uses only Agent Skills-compatible top-level keys.
+- Compatibility, version, tags, and dependencies live under `metadata`.
+- WorkBuddy-only version, author, and source fields are injected into the
+  distribution copy.
+- Every Skill has explicit activation and non-trigger conditions.
+- Every Skill Kit embeds required modules and declares them in `kit.yaml`.
+- Builders reject broken references, private paths, placeholders, caches, and
+  non-standard YAML before producing a ZIP.
+
+`paid: true/false` lives only in `lovstudio/general-skills` catalog metadata.
+User paths and brand settings come from CLI flags, environment variables, or
 `${LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}`.
-Reusable skills must not hard-code personal workspace paths or private
-LovStudio workspace assumptions.
 
-## Differences from Official skill-creator
+## Release
 
-| | Official | Lovstudio |
-|--|----------|-----------|
-| **README.md** | Explicitly forbidden | **Required** — repos are on GitHub |
-| **Frontmatter** | `name` + `description` | + `license`, `compatibility`, optional `depends_on`, `metadata.version`, `tags` |
-| **Naming** | Name matches installed skill dir | `lovstudio-<name>` frontmatter / `{name}-skill` source repo / `lovstudio-<name>` installed dir |
-| **Scripts** | Any format | Standalone Python CLI with `argparse` |
-| **Distribution** | `.skill` package | Independent source repo, catalog registration, mandatory lovstudio.ai/skills verification, and optional `dev-skills` mirror |
-| **Interactive** | Optional | `AskUserQuestion` mandatory for generation/conversion skills |
-| **General catalog** | — | `skills.yaml` + `README.md` in `lovstudio/general-skills` |
-| **User config** | Optional | Required when paths, brand, profile, or workspace conventions are user-specific |
+1. Validate source and every enabled distribution target.
+2. Commit and create `lovstudio/<name>-skill`.
+3. Tag the release.
+4. Register the appropriate catalogs.
+5. Revalidate and verify `https://lovstudio.ai/skills/<name>`.
+6. Submit the generated platform archive with commit, version, and checksum.
 
 ## License
 

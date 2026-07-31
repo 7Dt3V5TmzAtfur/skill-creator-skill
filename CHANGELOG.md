@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.0.0
+
+- Separate portable source frontmatter from platform distribution metadata.
+- Add Tencent WorkBuddy as a first-class distribution profile.
+- Generate self-contained Skill Kits with `kit.yaml` and embedded modules.
+- Add standard-YAML source, WorkBuddy, and package validation.
+- Add deterministic WorkBuddy ZIP building with source metadata injection.
+- Emit a combined Connector ZIP plus independently installable controller and
+  module ZIPs for composable Skill Kits.
+- Reject missing modules, broken local links, unresolved placeholders, private
+  paths, caches, and compiled Python artifacts before release.
+- Require explicit activation and non-trigger conditions for every Skill.
+
 ## 2.9.1
 
 - Make synchronization to `lovstudio.ai/skills` a mandatory publication step.

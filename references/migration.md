@@ -1,5 +1,26 @@
 # Migration Notes
 
+## 2026-07: v3 source/distribution split
+
+New scaffolds keep portable Agent Skills frontmatter in the canonical source
+and generate marketplace-only fields into distribution copies.
+
+When migrating an existing Skill:
+
+1. Move top-level `compatibility` and `depends_on` under `metadata`.
+2. Keep source top-level keys to `name`, `description`, `license`,
+   `allowed-tools`, and `metadata`.
+3. Add explicit `## Triggers`, activation phrases, and non-trigger conditions.
+4. Keep the Skill description between 50 and 200 characters.
+5. Convert controller/sibling relationships into a self-contained `kit.yaml`
+   plus embedded `skills/<module>/SKILL.md` paths.
+6. Add WorkBuddy metadata with `--distribution workbuddy` or copy the generated
+   profile from a fresh scaffold.
+7. Run `scripts/validate_skill.py` before rebuilding releases.
+
+Do not copy WorkBuddy `version`, `author`, or source-location fields back into
+the canonical source frontmatter. The platform builder injects them.
+
 ## 2026-07: one source path, no repository-target prompt
 
 The creator no longer exposes `--target`, `--dev-skills`, or a repository
