@@ -7,7 +7,7 @@ description: >
 license: MIT
 metadata:
   author: lovstudio
-  version: "3.0.0"
+  version: "3.1.0"
   tags:
     - skill-creator
     - scaffold
@@ -93,16 +93,16 @@ Key facts:
 
 ### Step 1: Understand the Skill
 
-Ask the user what the skill should do. Use `AskUserQuestion` — one question at
-a time, in the order below. **Do not skip or reorder.** The commercial model
-decides the architecture, so it has to come before any implementation question.
+Resolve the decisions below in order. Use `AskUserQuestion` one at a time only
+when context cannot answer a product, commercial, or distribution decision.
+Never ask for inferable technical choices. Commercial model still comes first.
 
 **Source repository invariant — do not ask:** every skill source lives in its
 own `lovstudio/{name}-skill` repository. Never ask the user to choose a source
 repository or scaffold target. Catalog and bundle registration are downstream
 distribution decisions inferred from category and commercial model.
 
-**Required question order:**
+**Required decision order:**
 
 #### Q1. Commercial / protection model — ALWAYS ask first
 
@@ -122,7 +122,7 @@ you can't infer from the initial request.
 - 选 2 → 走 encrypted skill 流程(README 里坦诚说明 "加密 = 鉴权闸门,不保证反提取")
 - 选 3 → **停下来读 `references/cloud-split.md`**,然后走 cloud-split 流程
 
-#### Q2. Problem & shape
+#### Q2. Problem & shape — PREFILL BEFORE ASKING
 - 解决什么问题?输入 → 输出是什么?
 - 2-3 个具体使用示例
 - 触发短语(中文 + English)
@@ -143,18 +143,17 @@ For paid skills, name the capability domain instead of narrating the logic:
 prefer `text-scorer` over `detect-viral-headline`, and `score` over
 `check_if_headline_is_viral`.
 
-#### Q3. Implementation type
-- 纯指令 SKILL.md,还是需要 Python CLI 脚本?
-- (如果 Q1 选了 3:这一问跳过。cloud-split 的"实现"就是云端 handler,不是本地脚本。)
+#### D3. Infer implementation shape — NEVER ASK
 
-Also decide the composition:
+Infer and briefly state the implementation and composition, then proceed:
 
-- **Single Skill** — one focused workflow.
-- **Skill Kit** — a controller plus two or more embedded modules and named
-  pipelines. List the modules and their order before scaffolding.
+- **Cloud handler** — mandatory for Q1 tier 3.
+- **Instruction-only** — judgment, research, conversation, or generation with no deterministic local transform.
+- **Python CLI** — repeatable parsing, conversion, validation, packaging, or file generation benefits from deterministic execution.
+- **Single Skill** — one outcome, or several modes that share context and are not independently useful.
+- **Skill Kit** — two or more independently useful stages, each with its own input/output, composed through named pipelines.
 
-For a Skill Kit, use `--kit` with one `--module` per embedded module. Do not
-leave required modules as external sibling paths.
+Scripts alone do not justify a Kit. Default to Single when modularity is marginal. For a Kit, list modules and pipeline order, then use `--kit` plus one `--module` per embedded module. Ask only when missing product information changes user-visible scope, never for a technical preference.
 
 #### Q4. Distribution target
 
@@ -275,7 +274,7 @@ it ships.
    - Frontmatter `description` is the trigger mechanism — cover what + when +
      concrete trigger phrases (中文 + English)
    - Body contains workflow steps, CLI reference, field mappings
-   - Use `AskUserQuestion` for interactive prompts before running scripts
+   - Use `AskUserQuestion` only for unresolved user-facing options before running scripts
    - Add a user configuration section when the workflow touches paths,
      personal data, brand assets, or workspace conventions
    - Never assume personal workspace paths or a fixed agent runtime path in
@@ -456,9 +455,10 @@ bundle entry.
 
 ### Interactive Pre-Execution (MANDATORY for generation/conversion skills)
 
-```markdown
-**IMPORTANT: Use `AskUserQuestion` to collect options BEFORE running.**
+Resolve options from context and sound defaults first. For material user-facing
+decisions that remain unresolved:
 
+```markdown
 Use `AskUserQuestion` with the following template:
 [options list]
 

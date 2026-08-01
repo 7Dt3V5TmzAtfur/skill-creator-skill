@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.0
+
+- Infer implementation type and Single Skill versus Skill Kit composition from
+  product requirements instead of asking users to choose technical machinery.
+- Reserve interactive questions for unresolved product, commercial,
+  distribution, and user-facing configuration decisions.
+- Prefer contextual prefill and sensible defaults before interactive prompts.
+
 ## 3.0.0
 
 - Separate portable source frontmatter from platform distribution metadata.

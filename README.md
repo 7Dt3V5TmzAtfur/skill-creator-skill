@@ -1,11 +1,13 @@
 # lovstudio-skill-creator
 
-![Version](https://img.shields.io/badge/version-3.0.0-CC785C)
+![Version](https://img.shields.io/badge/version-3.1.0-CC785C)
 
 Scaffold release-ready LovStudio Skills and self-contained Skill Kits as
 independent GitHub repositories. The v3 workflow separates portable source
 metadata from platform distributions, validates routing and dependencies, and
-builds Tencent WorkBuddy upload ZIPs without manual assembly.
+builds Tencent WorkBuddy upload ZIPs without manual assembly. It infers whether
+each request needs an instruction-only Skill, deterministic CLI, cloud handler,
+or multi-module Skill Kit instead of asking users to make technical choices.
 
 Part of [LovStudio Skills](https://lovstudio.ai/skills) — by [lovstudio.ai](https://lovstudio.ai)
 
