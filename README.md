@@ -1,32 +1,34 @@
 # lovstudio-skill-creator
 
-![Version](https://img.shields.io/badge/version-3.1.0-CC785C)
+![Version](https://img.shields.io/badge/version-4.0.0-CC785C)
 
-Scaffold release-ready LovStudio Skills and self-contained Skill Kits as
-independent GitHub repositories. The v3 workflow separates portable source
-metadata from platform distributions, validates routing and dependencies, and
-builds Tencent WorkBuddy upload ZIPs without manual assembly. It infers whether
-each request needs an instruction-only Skill, deterministic CLI, cloud handler,
-or multi-module Skill Kit instead of asking users to make technical choices.
+创建、验证并安装本地 LovStudio Skill 或自包含 Skill Kit。它会根据产品需求自动判断实现形态、Single/Kit 结构以及是否需要用户初始化层，不再让用户选择技术方案。
 
-Part of [LovStudio Skills](https://lovstudio.ai/skills) — by [lovstudio.ai](https://lovstudio.ai)
+远程仓库、目录市场、平台发行包与上传验收由独立的 `lovstudio-skill-publish` 负责。
 
-## Install
+## 安装
 
 ```bash
 git clone https://github.com/lovstudio/skill-creator-skill \
-  "${LOVSTUDIO_SKILLS_INSTALL_DIR:?Set LOVSTUDIO_SKILLS_INSTALL_DIR}/lovstudio-skill-creator"
+  "${LOVSTUDIO_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}/lovstudio-skill-creator"
 ```
 
-## Quick Start
-
-Single portable Skill:
+## 创建本地 Skill
 
 ```bash
-python3 "$SKILL_DIR/scripts/init_skill.py" wcx
+python3 "$SKILL_DIR/scripts/init_skill.py" wcx \
+  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
 ```
 
-Self-contained Skill Kit for WorkBuddy:
+需要持久化品牌、工作区或输出目录时，由代理自动增加：
+
+```bash
+python3 "$SKILL_DIR/scripts/init_skill.py" landing-page \
+  --user-config \
+  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
+```
+
+包含可独立调用阶段时，由代理自动创建 Skill Kit：
 
 ```bash
 python3 "$SKILL_DIR/scripts/init_skill.py" bp \
@@ -34,75 +36,26 @@ python3 "$SKILL_DIR/scripts/init_skill.py" bp \
   --module bp-outline \
   --module bp-deck \
   --module bp-polish \
-  --distribution workbuddy
+  --user-config \
+  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
 ```
 
-The second command generates:
+## 本地交付边界
 
-```text
-bp-skill/
-├── SKILL.md
-├── README.md
-├── kit.yaml
-├── skills/
-│   ├── bp-outline/SKILL.md
-│   ├── bp-deck/SKILL.md
-│   └── bp-polish/SKILL.md
-├── workbuddy/
-│   ├── connector-meta.json
-│   └── icon.svg
-└── scripts/
-    ├── validate_skill.py
-    └── build_workbuddy.py
-```
+Creator 的完成标准是：
 
-Fill the generated placeholders, then:
+1. 本地源码生成完成。
+2. `python3 scripts/validate_skill.py .` 通过。
+3. Skill 已链接到本地 Agent Skills 目录。
+4. 触发、非触发以及 Kit 流水线完成基本验收。
 
-```bash
-python3 scripts/validate_skill.py .
-python3 scripts/validate_skill.py . --target workbuddy
-python3 scripts/build_workbuddy.py . --output-dir dist/workbuddy
-```
+发布到 LovStudio、WorkBuddy 或其他平台时，使用 `lovstudio-skill-publish`。
 
-The last command writes a validated, self-contained `dist/workbuddy.zip` and
-individual controller/module ZIPs under `dist/workbuddy-individual/`.
+## 依赖
 
-## Architecture
-
-| Layer | Location | Purpose |
-|-------|----------|---------|
-| Source repository | `lovstudio/<name>-skill` | Canonical portable Skill or Skill Kit |
-| General catalog | `lovstudio/general-skills` | Public index and commercial metadata |
-| Dev bundle | `lovstudio/dev-skills` | Generated mirror of tagged releases |
-| WorkBuddy profile | `<name>-skill/workbuddy` | Connector metadata and market icon |
-| Agent runtime | Installed `lovstudio-<name>` directory | Local execution |
-
-Every source repository is independent. Catalogs, bundles, marketplace ZIPs,
-and local installs are downstream distributions.
-
-## Source and Distribution Contract
-
-- Canonical `SKILL.md` uses only Agent Skills-compatible top-level keys.
-- Compatibility, version, tags, and dependencies live under `metadata`.
-- WorkBuddy-only version, author, and source fields are injected into the
-  distribution copy.
-- Every Skill has explicit activation and non-trigger conditions.
-- Every Skill Kit embeds required modules and declares them in `kit.yaml`.
-- Builders reject broken references, private paths, placeholders, caches, and
-  non-standard YAML before producing a ZIP.
-
-`paid: true/false` lives only in `lovstudio/general-skills` catalog metadata.
-User paths and brand settings come from CLI flags, environment variables, or
-`${LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}`.
-
-## Release
-
-1. Validate source and every enabled distribution target.
-2. Commit and create `lovstudio/<name>-skill`.
-3. Tag the release.
-4. Register the appropriate catalogs.
-5. Revalidate and verify `https://lovstudio.ai/skills/<name>`.
-6. Submit the generated platform archive with commit, version, and checksum.
+- Python 3.8+
+- PyYAML
+- Git（仅在需要本地版本历史时使用）
 
 ## License
 

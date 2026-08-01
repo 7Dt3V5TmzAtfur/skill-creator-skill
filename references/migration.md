@@ -1,5 +1,17 @@
 # Migration Notes
 
+## 2026-08: v4 local creation and separate publishing
+
+`lovstudio-skill-creator` now ends at validated local installation. Remove
+`--distribution`, `--paid`, platform directories, marketplace builders, remote
+repository commands, catalog registration, and live-channel verification from
+creation workflows. Use `--user-config` only when inferred persistent settings
+are required and pass `--install-dir` for local discovery.
+
+Existing platform packaging and release workflows move to
+`lovstudio-skill-publish`. Historical sections below describe older layouts and
+remain only for migration audits.
+
 ## 2026-07: v3 source/distribution split
 
 New scaffolds keep portable Agent Skills frontmatter in the canonical source

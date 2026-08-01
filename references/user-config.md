@@ -1,37 +1,42 @@
-# User Configuration Reference
+# Automatic User Initialization
 
-Use this reference when creating or refactoring skills that currently assume a
-specific local machine, workspace, brand, or output path.
+Add this layer only when a Skill needs persistent workspace, identity, brand,
+locale, output, model, provider, or integration settings across runs.
 
-## Rule
+## Decision rule
 
-Reusable skills must not depend on Mark's machine layout. Do not scatter these
-values through `SKILL.md`, scripts, or README examples:
+Use `--user-config` when at least one required value should persist beyond the
+current invocation. Omit it when explicit inputs and the current directory are
+sufficient. Infer this from the Skill's behavior; do not ask users to choose a
+configuration mode.
 
-- a personal home-directory absolute path
-- `~/lovstudio/...`
-- private LovStudio web, vault, brand, or design-guide paths
-- `~/.claude/...` as a required runtime path
+Every generated Skill remains portable. LovStudio and other brands use the same
+fields with different values; there is no internal-only variant.
 
-## Resolution Order
+## First-run flow
 
-When a skill needs user-specific settings, resolve them in this order:
+1. Prefill from the current request and project.
+2. Apply explicit CLI and environment values.
+3. Read the shared profile.
+4. Infer safe defaults.
+5. Ask once only for required user-facing values that remain unknown.
+6. Show what will be saved and persist it with the user's knowledge.
 
-1. Explicit CLI flags.
-2. Environment variables.
-3. Shared user profile JSON.
-4. Safe defaults such as the current working directory or `$HOME/Documents`.
-5. Ask the user once and tell them which setting is missing.
+## Resolution order
 
-## Shared Profile
+1. Explicit CLI flags or current request.
+2. Skill-specific environment variables.
+3. Shared profile JSON.
+4. Safe defaults such as the current directory or `$HOME/Documents`.
+5. One focused question for a remaining required value.
 
-Default profile path:
+Default profile:
 
 ```bash
 ${LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}
 ```
 
-Recommended shape:
+Recommended portable fields:
 
 ```json
 {
@@ -53,38 +58,5 @@ Recommended shape:
 }
 ```
 
-Environment variable overrides:
-
-| Variable | Meaning |
-|----------|---------|
-| `LOVSTUDIO_SKILLS_PROFILE` | Shared profile JSON path |
-| `LOVSTUDIO_SKILLS_HOME` | Shared LovStudio skills config/data directory |
-| `LOVSTUDIO_SKILLS_WORKSPACE_ROOT` | Workspace root |
-| `LOVSTUDIO_SKILLS_OUTPUT_DIR` | Default output directory |
-| `LOVSTUDIO_SKILLS_BRAND_PROFILE` | Brand profile JSON or Markdown |
-| `LOVSTUDIO_SKILLS_DESIGN_GUIDE` | Design guide path |
-
-## Refactor Pattern
-
-Replace this:
-
-```markdown
-Read a design guide from a personal absolute workspace path.
-Write output to a personal absolute workspace path.
-```
-
-With this:
-
-```markdown
-Resolve brand settings from `LOVSTUDIO_SKILLS_DESIGN_GUIDE` or the shared profile.
-Resolve output from `--output`, `LOVSTUDIO_SKILLS_OUTPUT_DIR`, or the shared profile.
-If neither exists, ask the user once and default to `$HOME/Documents`.
-```
-
-## Classification
-
-- `portable`: no local or brand-specific assumptions.
-- `config-needed`: reusable, but needs a profile/env layer before public use.
-- `lovstudio-defaults`: generic core with optional LovStudio defaults.
-- `author-only`: intentionally tied to Mark/LovStudio private workspace.
-- `legacy-name`: still uses namespace-style or mismatched directory naming.
+Do not commit resolved personal values, private absolute paths, credentials, or
+provider tokens into reusable Skill source.
