@@ -21,7 +21,7 @@ metadata:
 Create every Skill as a portable local source directory named `{name}-skill`,
 validate it, and install it into the user's local agent skills directory as
 `lovstudio-{name}`. Remote repositories, catalogs, marketplace packages,
-uploads, and live-channel verification belong to `lovstudio-skill-publish`.
+uploads, and live-channel verification belong to `lovstudio-skill-publisher`.
 
 ## Triggers
 
@@ -33,7 +33,7 @@ uploads, and live-channel verification belong to `lovstudio-skill-publish`.
 ### Do not activate when
 
 - 用户只是在调用现有 Skill 完成业务任务。
-- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `lovstudio-skill-publish`。
+- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `lovstudio-skill-publisher`。
 
 ## Architecture
 
@@ -198,7 +198,7 @@ Completion requires:
 6. Every Skill Kit module and at least one named pipeline are exercised.
 
 Stop at the local result unless the user also requests publication. When they
-do, invoke `lovstudio-skill-publish` with the validated source path and requested
+do, invoke `lovstudio-skill-publisher` with the validated source path and requested
 channels; do not duplicate publishing logic in this Skill.
 
 ## Design Patterns

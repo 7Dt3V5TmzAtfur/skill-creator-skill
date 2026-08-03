@@ -9,7 +9,7 @@ creation workflows. Use `--user-config` only when inferred persistent settings
 are required and pass `--install-dir` for local discovery.
 
 Existing platform packaging and release workflows move to
-`lovstudio-skill-publish`. Historical sections below describe older layouts and
+`lovstudio-skill-publisher`. Historical sections below describe older layouts and
 remain only for migration audits.
 
 ## 2026-07: v3 source/distribution split

@@ -4,7 +4,7 @@
 
 创建、验证并安装本地 LovStudio Skill 或自包含 Skill Kit。它会根据产品需求自动判断实现形态、Single/Kit 结构以及是否需要用户初始化层，不再让用户选择技术方案。
 
-远程仓库、目录市场、平台发行包与上传验收由独立的 `lovstudio-skill-publish` 负责。
+远程仓库、目录市场、平台发行包与上传验收由独立的 `lovstudio-skill-publisher` 负责。
 
 ## 安装
 
@@ -49,7 +49,7 @@ Creator 的完成标准是：
 3. Skill 已链接到本地 Agent Skills 目录。
 4. 触发、非触发以及 Kit 流水线完成基本验收。
 
-发布到 LovStudio、WorkBuddy 或其他平台时，使用 `lovstudio-skill-publish`。
+发布到 LovStudio、WorkBuddy 或其他平台时，使用 `lovstudio-skill-publisher`。
 
 ## 依赖
 

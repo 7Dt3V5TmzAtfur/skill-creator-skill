@@ -63,4 +63,4 @@ not questions for the user.
 - Verify the local install symlink resolves to the source.
 - Exercise trigger routing and at least one Kit pipeline when applicable.
 
-Remote publication is a separate `lovstudio-skill-publish` workflow.
+Remote publication is a separate `lovstudio-skill-publisher` workflow.

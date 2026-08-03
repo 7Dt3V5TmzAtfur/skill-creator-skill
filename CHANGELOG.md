@@ -5,7 +5,7 @@
 - Make local source creation, validation, and local installation the complete
   default workflow.
 - Move remote repositories, catalogs, marketplace packaging, uploads, and live
-  verification to the separate `lovstudio-skill-publish` capability.
+  verification to the separate `lovstudio-skill-publisher` capability.
 - Infer user configuration from persistent workspace, brand, identity, output,
   locale, and provider needs instead of asking users to choose a mode.
 - Remove the LovStudio-internal configuration branch; every source is portable

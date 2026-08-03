@@ -1,7 +1,7 @@
 # LovStudio Local Skill Source Standard
 
 This standard covers creation, validation, and local installation. Publication
-and channel packaging belong to `lovstudio-skill-publish`.
+and channel packaging belong to `lovstudio-skill-publisher`.
 
 ## Naming and source
 
