@@ -1,14 +1,37 @@
 schema: skill-manifest/v1
 id: sgc-skill-creator
-version: 4.0.0
+version: 4.2.0
 runtime: skill-runtime/v1
 context:
   profile:
+    schema: user-profile/v1
+    source: shared-profile
+    read:
+    - user
+    - brand
+    - workspace
+    - preferences
+    - skills.sgc-skill-creator
+    persist:
+      enabled: true
+      namespace: skills.sgc-skill-creator
+      records_path: skills.sgc-skill-creator.records
+      write_policy: direct-user-statement
+      atomic: true
     fields:
-    - path: identity.name
-      required: true
+    - path: user.name
+      aliases:
+      - identity.name
+      required: false
+      question: 如果本次输出需要用户身份，请提供名称。
+    - path: brand.name
+      aliases:
+      - identity.name
+      required: false
       question: 如果本次输出需要品牌身份，请提供品牌名称。
-    - path: identity.logo
+    - path: brand.logo
+      aliases:
+      - identity.logo
       required: false
       question: 如果需要使用品牌 Logo，请提供 Logo 地址或文件路径。
     - path: brand.tone

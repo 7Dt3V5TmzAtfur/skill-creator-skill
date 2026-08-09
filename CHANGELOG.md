@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.2.0
+
+- Make `user-profile/v1` a default contract for every generated Skill.
+- Add cross-session profile reads and atomic direct-user record persistence.
+- Generate `skill.yaml`, `references/user-profile.md`, and `profile_store.py` for
+  single Skills and embedded Skill Kit modules.
+
+## 4.1.0
+
+- Require a reusable Skill trust bundle: Skill Card, real user case, dimension
+  map, pricing basis, and explicit distribution states.
+- Scaffold machine-readable and human-readable card files plus a case template.
+- Validate Input → Prompt → Output evidence, dimension evidence, pricing basis,
+  and unresolved placeholders before local completion.
+- Expand the standard to cover language units such as words, idioms, slang, and
+  complex expressions when a Skill's domain needs them.
+
 ## 4.0.0
 
 - Make local source creation, validation, and local installation the complete

@@ -27,18 +27,10 @@ phrases, explicit non-triggers, ordered workflow, dependencies, and validation.
 
 ## Automatic source shape
 
-No persistent settings:
+Every generated Skill includes the Profile contract:
 
 ```bash
 python3 scripts/init_skill.py <name> --install-dir "$SKILL_SKILLS_INSTALL_DIR"
-```
-
-Persistent workspace, brand, locale, output, or provider settings:
-
-```bash
-python3 scripts/init_skill.py <name> \
-  --user-config \
-  --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
 Self-contained Skill Kit:
@@ -48,12 +40,13 @@ python3 scripts/init_skill.py <name> \
   --kit \
   --module <module-a> \
   --module <module-b> \
-  --user-config \
   --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
-The agent infers these flags from requirements. They are implementation inputs,
-not questions for the user.
+The generated source always includes `skill.yaml`,
+`references/user-profile.md`, and `scripts/profile_store.py`. The old
+`--user-config` flag remains accepted as a compatibility alias and does not
+change the generated contract.
 
 ## Completion
 

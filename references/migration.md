@@ -2,11 +2,13 @@
 
 ## 2026-08: v4 local creation and separate publishing
 
-`sgc-skill-creator` now ends at validated local installation. Remove
+`sgc-skill-creator` now ends at validated local installation. Every fresh source
+also carries the `user-profile/v1` cross-session Profile contract. Remove
 `--distribution`, `--paid`, platform directories, marketplace builders, remote
 repository commands, catalog registration, and live-channel verification from
-creation workflows. Use `--user-config` only when inferred persistent settings
-are required and pass `--install-dir` for local discovery.
+creation workflows. The legacy `--user-config` flag remains accepted for
+compatibility, while Profile generation is always on; pass `--install-dir` for
+local discovery.
 
 Existing platform packaging and release workflows move to
 `sgc-skill-publisher`. Historical sections below describe older layouts and
