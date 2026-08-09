@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a portable local LovStudio Skill source directory."""
+"""Validate a portable local Skill Publisher Skill source directory."""
 
 from __future__ import annotations
 

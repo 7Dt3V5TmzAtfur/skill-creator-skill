@@ -10,7 +10,7 @@ current invocation. Omit it when explicit inputs and the current directory are
 sufficient. Infer this from the Skill's behavior; do not ask users to choose a
 configuration mode.
 
-Every generated Skill remains portable. LovStudio and other brands use the same
+Every generated Skill remains portable. Skill Publisher and other brands use the same
 fields with different values; there is no internal-only variant.
 
 ## First-run flow
@@ -33,7 +33,7 @@ fields with different values; there is no internal-only variant.
 Default profile:
 
 ```bash
-${LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}
+${SKILL_PROFILE_PATH:-$HOME/.skill-publisher/skills/profile.json}
 ```
 
 Recommended portable fields:
@@ -52,8 +52,8 @@ Recommended portable fields:
   "brand": {
     "name": "Your Brand",
     "site": "https://example.com",
-    "profile": "$HOME/.lovstudio/skills/brand.json",
-    "design_guide": "$HOME/.lovstudio/skills/design-guide.md"
+    "profile": "$HOME/.skill-publisher/skills/brand.json",
+    "design_guide": "$HOME/.skill-publisher/skills/design-guide.md"
   }
 }
 ```

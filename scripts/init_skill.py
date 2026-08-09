@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Initialize and optionally install a portable local LovStudio Skill."""
+"""Initialize and optionally install a portable local Skill Publisher Skill."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ description: >
   并自然包含用户会说出的中文与 English 触发语句。
 license: MIT
 metadata:
-  author: lovstudio
+  author: skill-publisher
   version: "0.1.0"
   tags:
     - TODO
@@ -116,9 +116,9 @@ TODO：用一句话说明用户获得的结果。
 
 ```bash
 export SKILL_SOURCE_DIR="$(pwd)"
-mkdir -p "${{LOVSTUDIO_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}}"
+mkdir -p "${{SKILL_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}}"
 ln -s "$SKILL_SOURCE_DIR" \
-  "$LOVSTUDIO_SKILLS_INSTALL_DIR/sgc-{name}"
+  "$SKILL_SKILLS_INSTALL_DIR/sgc-{name}"
 ```
 
 {configuration_section}## 使用
@@ -149,7 +149,7 @@ README_CONFIGURATION = """## 用户配置
 默认共享配置：
 
 ```bash
-${LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}
+${SKILL_PROFILE_PATH:-$HOME/.skill-publisher/skills/profile.json}
 ```
 
 """
@@ -179,7 +179,7 @@ dist/
 
 LICENSE_MD = """MIT License
 
-Copyright (c) 2026 LovStudio
+Copyright (c) 2026 Skill Publisher
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -233,7 +233,7 @@ brands. Never store a personal absolute path in committed Skill source.
 ## Shared profile
 
 ```bash
-${{LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}}
+${{SKILL_PROFILE_PATH:-$HOME/.skill-publisher/skills/profile.json}}
 ```
 
 ```json
@@ -250,13 +250,13 @@ ${{LOVSTUDIO_SKILLS_PROFILE:-$HOME/.lovstudio/skills/profile.json}}
   "brand": {
     "name": "Your Brand",
     "site": "https://example.com",
-    "profile": "$HOME/.lovstudio/skills/brand.json",
-    "design_guide": "$HOME/.lovstudio/skills/design-guide.md"
+    "profile": "$HOME/.skill-publisher/skills/brand.json",
+    "design_guide": "$HOME/.skill-publisher/skills/design-guide.md"
   }
 }
 ```
 
-LovStudio uses these same fields with LovStudio values. Other users provide
+Skill Publisher uses these same fields with Skill Publisher values. Other users provide
 their own values; there is no separate internal mode.
 """
 
@@ -276,8 +276,8 @@ def _nested(data: dict, dotted: str) -> Optional[str]:
 
 def _load_profile() -> Tuple[Path, dict]:
     profile = _expand_path(
-        os.environ.get("LOVSTUDIO_SKILLS_PROFILE")
-        or str(Path.home() / ".lovstudio/skills/profile.json")
+        os.environ.get("SKILL_PROFILE_PATH")
+        or str(Path.home() / ".skill-publisher/skills/profile.json")
     )
     if not profile.exists():
         return profile, {}
@@ -300,12 +300,12 @@ def resolve_base(cli_path: str) -> Path:
     if cli_path:
         return _expand_path(cli_path)
     _, profile = _load_profile()
-    if os.environ.get("LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"):
-        return _expand_path(os.environ["LOVSTUDIO_SKILL_CREATOR_REPOS_ROOT"])
+    if os.environ.get("SKILL_SKILL_CREATOR_REPOS_ROOT"):
+        return _expand_path(os.environ["SKILL_SKILL_CREATOR_REPOS_ROOT"])
     profile_value = _profile_first(
         profile,
         (
-            "lovstudio.skill_repos_root",
+            "skill-publisher.skill_repos_root",
             "skills.repos_root",
             "workspace.skill_repos_root",
             "workspace.skills_root",
@@ -317,14 +317,14 @@ def resolve_base(cli_path: str) -> Path:
 def resolve_install_dir(cli_path: str) -> Optional[Path]:
     if cli_path:
         return _expand_path(cli_path)
-    if os.environ.get("LOVSTUDIO_SKILLS_INSTALL_DIR"):
-        return _expand_path(os.environ["LOVSTUDIO_SKILLS_INSTALL_DIR"])
+    if os.environ.get("SKILL_SKILLS_INSTALL_DIR"):
+        return _expand_path(os.environ["SKILL_SKILLS_INSTALL_DIR"])
     _, profile = _load_profile()
     profile_value = _profile_first(
         profile,
         (
             "skills.install_dir",
-            "lovstudio.skills_install_dir",
+            "skill-publisher.skills_install_dir",
             "workspace.skills_install_dir",
         ),
     )

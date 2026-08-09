@@ -1,11 +1,11 @@
 ---
 name: sgc-skill-creator
 description: >
-  创建、验证并安装本地 LovStudio Skill 或 Skill Kit；当用户说“创建 skill”、
+  创建、验证并安装本地 Skill Publisher Skill 或 Skill Kit；当用户说“创建 skill”、
   “封装成 skill”、"create a skill" 或 "scaffold skill kit" 时使用。
 license: MIT
 metadata:
-  author: lovstudio
+  author: contributors
   version: "4.0.0"
   tags:
     - skill-creator
@@ -62,7 +62,7 @@ Key rules:
   `allowed-tools`, and `metadata`.
 - Required modules live inside a Skill Kit; no external sibling dependencies.
 - User-specific values come from flags, environment, or a portable profile.
-- LovStudio is a possible profile value, never a separate implementation mode.
+- Skill Publisher is a possible profile value, never a separate implementation mode.
 - Do not create remotes, releases, catalogs, platform packages, or uploads here.
 
 ## Creation Workflow
@@ -120,7 +120,7 @@ first-run initialization flow automatically with this precedence:
    user's knowledge.
 
 Every generated Skill remains portable. Never introduce an author-only or
-LovStudio-only branch; different users supply different profile values.
+Skill Publisher-only branch; different users supply different profile values.
 
 ### Step 4: Plan contents
 
@@ -140,7 +140,7 @@ Single Skill without persistent configuration:
 
 ```bash
 python3 "$SKILL_DIR/scripts/init_skill.py" <name> \
-  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
+  --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
 Skill Kit with inferred user configuration:
@@ -151,7 +151,7 @@ python3 "$SKILL_DIR/scripts/init_skill.py" <name> \
   --module <module-a> \
   --module <module-b> \
   --user-config \
-  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
+  --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
 Resolve the install directory from an explicit flag, environment variable,
@@ -227,3 +227,11 @@ contracts, and asset catalogs into directly referenced files.
 For source templates see `references/templates.md`. For configuration rules see
 `references/user-config.md`. Historical migrations remain in
 `references/migration.md`.
+
+## Runtime context (shared)
+
+运行前读取本 Skill 包的 `skill.yaml`，由宿主提供 `skill-runtime/v1` 上下文。字段解析顺序为：当前请求、项目上下文、个人 Preferences、品牌 Profile、通用默认值。
+
+- 只使用 Manifest 声明的字段；Profile 保存公开品牌事实，Preferences 保存个人工作偏好。
+- `required: true` 字段缺失时，按 Manifest 的问题配置向用户提出一个聚焦问题；用户明确同意后再保存回答。
+- 报错提供可复制的 `context_id`、字段路径与来源，诊断内容避开秘密、完整私人路径和原始配置。

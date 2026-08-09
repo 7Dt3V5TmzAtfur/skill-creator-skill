@@ -13,7 +13,7 @@ description: >
   Chinese and English trigger phrases.
 license: MIT
 metadata:
-  author: lovstudio
+  author: skill-publisher
   version: "0.1.0"
   tags:
     - <tag>
@@ -30,7 +30,7 @@ phrases, explicit non-triggers, ordered workflow, dependencies, and validation.
 No persistent settings:
 
 ```bash
-python3 scripts/init_skill.py <name> --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
+python3 scripts/init_skill.py <name> --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
 Persistent workspace, brand, locale, output, or provider settings:
@@ -38,7 +38,7 @@ Persistent workspace, brand, locale, output, or provider settings:
 ```bash
 python3 scripts/init_skill.py <name> \
   --user-config \
-  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
+  --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
 Self-contained Skill Kit:
@@ -49,7 +49,7 @@ python3 scripts/init_skill.py <name> \
   --module <module-a> \
   --module <module-b> \
   --user-config \
-  --install-dir "$LOVSTUDIO_SKILLS_INSTALL_DIR"
+  --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
 The agent infers these flags from requirements. They are implementation inputs,
