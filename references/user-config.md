@@ -47,7 +47,7 @@ Recommended portable fields:
   },
   "workspace": {
     "root": "$HOME/projects",
-    "output_dir": "$HOME/Documents/lovstudio-skill-output"
+    "output_dir": "$HOME/Documents/sgc-skill-output"
   },
   "brand": {
     "name": "Your Brand",

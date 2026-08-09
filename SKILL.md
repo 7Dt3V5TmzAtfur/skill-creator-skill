@@ -1,5 +1,5 @@
 ---
-name: lovstudio-skill-creator
+name: sgc-skill-creator
 description: >
   创建、验证并安装本地 LovStudio Skill 或 Skill Kit；当用户说“创建 skill”、
   “封装成 skill”、"create a skill" 或 "scaffold skill kit" 时使用。
@@ -16,12 +16,12 @@ metadata:
   dependencies: []
 ---
 
-# lovstudio-skill-creator
+# sgc-skill-creator
 
 Create every Skill as a portable local source directory named `{name}-skill`,
 validate it, and install it into the user's local agent skills directory as
-`lovstudio-{name}`. Remote repositories, catalogs, marketplace packages,
-uploads, and live-channel verification belong to `lovstudio-skill-publisher`.
+`sgc-{name}`. Remote repositories, catalogs, marketplace packages,
+uploads, and live-channel verification belong to `sgc-skill-publisher`.
 
 ## Triggers
 
@@ -33,7 +33,7 @@ uploads, and live-channel verification belong to `lovstudio-skill-publisher`.
 ### Do not activate when
 
 - 用户只是在调用现有 Skill 完成业务任务。
-- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `lovstudio-skill-publisher`。
+- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `sgc-skill-publisher`。
 
 ## Architecture
 
@@ -51,13 +51,13 @@ uploads, and live-channel verification belong to `lovstudio-skill-publisher`.
     └── assets/                  # reusable output assets
 
 <agent skills directory>/
-└── lovstudio-{name} -> <local source root>/{name}-skill
+└── sgc-{name} -> <local source root>/{name}-skill
 ```
 
 Key rules:
 
 - Creation ends with a validated, locally discoverable Skill.
-- Source frontmatter name is `lovstudio-{name}` and uses kebab-case.
+- Source frontmatter name is `sgc-{name}` and uses kebab-case.
 - Source top-level fields are limited to `name`, `description`, `license`,
   `allowed-tools`, and `metadata`.
 - Required modules live inside a Skill Kit; no external sibling dependencies.
@@ -198,7 +198,7 @@ Completion requires:
 6. Every Skill Kit module and at least one named pipeline are exercised.
 
 Stop at the local result unless the user also requests publication. When they
-do, invoke `lovstudio-skill-publisher` with the validated source path and requested
+do, invoke `sgc-skill-publisher` with the validated source path and requested
 channels; do not duplicate publishing logic in this Skill.
 
 ## Design Patterns
