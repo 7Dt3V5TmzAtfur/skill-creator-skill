@@ -2,7 +2,7 @@
 
 ## 2026-08: v4 local creation and separate publishing
 
-`sgc-skill-creator` now ends at validated local installation. Every fresh source
+`lov-skill-creator` now ends at validated local installation. Every fresh source
 also carries the `user-profile/v1` cross-session Profile contract. Remove
 `--distribution`, `--paid`, platform directories, marketplace builders, remote
 repository commands, catalog registration, and live-channel verification from
@@ -11,7 +11,7 @@ compatibility, while Profile generation is always on; pass `--install-dir` for
 local discovery.
 
 Existing platform packaging and release workflows move to
-`sgc-skill-publisher`. Historical sections below describe older layouts and
+`lov-skill-publisher`. Historical sections below describe older layouts and
 remain only for migration audits.
 
 ## 2026-07: v3 source/distribution split
@@ -62,13 +62,13 @@ The direct-source aggregate model below is retained only as historical context
 and must not be used for new work:
 
 ```bash
-python3 ~/.claude/skills/sgc-skill-creator/scripts/init_skill.py tanstack-query --target dev-skills
+python3 ~/.claude/skills/lov-skill-creator/scripts/init_skill.py tanstack-query --target dev-skills
 ```
 
 The skill directory is:
 
 ```text
-~/skill-publisher/coding/sgc-dev-skills/skills/tanstack-query/
+~/skill-publisher/coding/lov-dev-skills/skills/tanstack-query/
 ```
 
 `skills.yaml` must include:
@@ -81,14 +81,14 @@ skill_path: skills/tanstack-query
 ## 2026-04: independent per-skill repos
 
 The ecosystem was refactored from a monorepo (`skill-publisher/skills` containing
-`skills/sgc-<name>/`) + mirror (`skill-publisher/pro-skills`) into independent
+`skills/lov-<name>/`) + mirror (`skill-publisher/pro-skills`) into independent
 per-skill repos + central index. The old `skill-publisher/pro-skills` was archived.
 
 If working on a legacy skill still in the old structure, migrate it first:
 
 ```bash
 # 1. Extract from monorepo subdirectory
-cp -r ~/projects/sgc-skills/skills/sgc-<name> \
+cp -r ~/projects/lov-skills/skills/lov-<name> \
       ~/skill-publisher/coding/skills/<name>-skill
 cd ~/skill-publisher/coding/skills/<name>-skill
 

@@ -7,7 +7,7 @@ without remote repositories or platform distribution metadata.
 
 ```yaml
 ---
-name: sgc-<name>
+name: lov-<name>
 description: >
   Use 50-200 characters to explain the outcome, supported inputs, and concrete
   Chinese and English trigger phrases.
@@ -56,4 +56,18 @@ change the generated contract.
 - Verify the local install symlink resolves to the source.
 - Exercise trigger routing and at least one Kit pipeline when applicable.
 
-Remote publication is a separate `sgc-skill-publisher` workflow.
+Remote publication is a separate `lov-skill-publisher` workflow.
+
+## Mandatory Skill group composition record
+
+Every new source includes `references/skill-composition.md`. Before replacing
+its placeholders, inspect related local and installed Skills and record:
+
+1. nearby Skills considered and their actual routing contract;
+2. each upstream/core/downstream atom with the artifact-level handoff;
+3. overlaps that should be reused or extended rather than duplicated; and
+4. the final Single Skill versus self-contained Kit decision.
+
+External sibling Skills are optional handoffs, not hidden runtime dependencies.
+If two or more stages require a hard dependency for the same user-visible
+result, embed them in the new Skill Kit and keep the source self-contained.

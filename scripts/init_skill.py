@@ -14,7 +14,7 @@ from typing import Optional, Tuple
 
 
 SKILL_MD = """---
-name: sgc-{name}
+name: lov-{name}
 description: >
   TODO：用 50–200 个字符说明这个 Skill 能完成什么、适用于哪些输入或任务，
   并自然包含用户会说出的中文与 English 触发语句。
@@ -44,7 +44,7 @@ TODO：用一到两句话说明用户得到的结果，不要把内部背景或�
 
 - TODO：列出相邻但不属于本 Skill 的任务，并说明应交给什么能力。
 
-{user_profile_section}{kit_section}## Workflow (MANDATORY)
+{user_profile_section}{kit_section}{skill_composition_section}## Workflow (MANDATORY)
 
 **You MUST follow these steps in order.**
 
@@ -59,7 +59,7 @@ TODO：用一到两句话说明用户得到的结果，不要把内部背景或�
 When running scripts manually:
 
 ```bash
-export SKILL_DIR="/path/to/sgc-{name}"
+export SKILL_DIR="/path/to/lov-{name}"
 ```
 
 {user_profile_runtime}### Step 1: Understand the requested outcome
@@ -68,6 +68,15 @@ export SKILL_DIR="/path/to/sgc-{name}"
 - Confirm the input, intended audience, expected deliverable, and evidence gaps.
 - Record one real user case before calling the Skill complete. The case must show
   the input, the prompt or minimum brief, and the output; do not invent results.
+
+### Step 1.5: Analyze nearby Skills before implementation
+
+- Inspect related local and installed Skills by routing contract and concrete
+  input/output, not by filename alone.
+- Record upstream, core, downstream, overlap, and not-composed decisions in
+  `references/skill-composition.md`.
+- Keep sibling Skills optional and artifact-based. When stages require hard
+  coupling for one outcome, create a self-contained Kit instead.
 
 ### Step 2: Execute the workflow
 
@@ -108,6 +117,15 @@ using `--confirm`, followed by a concise saved-path report.
 
 """
 
+SKILL_COMPOSITION_SECTION = """## Skill Group Composition
+
+Read `references/skill-composition.md` before deciding whether to invoke or
+extend any adjacent capability. The record distinguishes optional upstream and
+downstream handoffs from embedded Kit modules. Do not silently depend on a
+sibling Skill that is not shipped with this source.
+
+"""
+
 KIT_SECTION = """## Skill Kit Modules
 
 This repository is a self-contained Skill Kit. At Step 0, load and verify:
@@ -119,7 +137,7 @@ listed there must ship inside this repository.
 
 """
 
-README_MD = """# sgc-{name}
+README_MD = """# lov-{name}
 
 ![Version](https://img.shields.io/badge/version-0.1.0-CC785C)
 
@@ -133,12 +151,18 @@ TODO：用一句话说明用户获得的结果。
 export SKILL_SOURCE_DIR="$(pwd)"
 mkdir -p "${{SKILL_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}}"
 ln -s "$SKILL_SOURCE_DIR" \
-  "$SKILL_SKILLS_INSTALL_DIR/sgc-{name}"
+  "$SKILL_SKILLS_INSTALL_DIR/lov-{name}"
 ```
 
 {configuration_section}## 使用
 
 TODO：提供两个真实示例，并说明输入与输出。
+
+## 原子组合
+
+每个新 Skill 都带有 `references/skill-composition.md`。它记录已检查的相邻
+Skills、可选的上游/下游交接、重叠处理，以及为何选择 Single Skill 或自包含
+Skill Kit；外部 sibling Skill 不作为隐藏依赖。
 
 ## 可信度卡与用户案例
 
@@ -236,7 +260,7 @@ distribution:
     - lovstudio
 """
 
-SKILL_CARD_MD = """# Skill Card — sgc-{name}
+SKILL_CARD_MD = """# Skill Card — lov-{name}
 
 This human-readable card mirrors `skill-card.yaml`. It is a release record, not
 an implementation note. A reviewer should understand the Skill without opening
@@ -363,7 +387,7 @@ Profile 读取用户、品牌、工作区和本 Skill 的长期记录。用户�
 """
 
 SKILL_MANIFEST_YAML = """schema: skill-manifest/v1
-id: sgc-{name}
+id: lov-{name}
 version: "0.1.0"
 runtime: skill-runtime/v1
 context:
@@ -375,11 +399,11 @@ context:
       - brand
       - workspace
       - preferences
-      - skills.sgc-{name}
+      - skills.lov-{name}
     persist:
       enabled: true
-      namespace: skills.sgc-{name}
-      records_path: skills.sgc-{name}.records
+      namespace: skills.lov-{name}
+      records_path: skills.lov-{name}.records
       write_policy: direct-user-statement
       atomic: true
     fields:
@@ -422,7 +446,7 @@ context:
 KIT_YAML = """name: {name}
 display_name: "TODO"
 version: "0.1.0"
-entrypoint: sgc-{name}
+entrypoint: lov-{name}
 modules:
 {module_entries}
 pipelines:
@@ -512,7 +536,7 @@ immediately after the user statement and report the canonical path:
 
 ```bash
 python3 scripts/profile_store.py record \\
-  --skill-id sgc-example \\
+  --skill-id lov-example \\
   --path records.subtitle_level \\
   --value '\"cet4\"' \\
   --confirm
@@ -530,7 +554,7 @@ keep it in the current request context.
 
 ```bash
 python3 scripts/profile_store.py read \\
-  --skill-id sgc-example \\
+  --skill-id lov-example \\
   --pretty
 ```
 
@@ -543,6 +567,34 @@ as `profile_scope` and `profile_contract`.
 `--user-config` remains accepted by the Creator as a compatibility flag for old
 invocations. The Profile contract is now always generated; users do not choose
 an initialization mode.
+"""
+
+SKILL_COMPOSITION_MD = """# Skill Group Composition
+
+This record is required for every generated Skill. It prevents adjacent Skills
+from becoming accidental duplicates or hidden dependencies.
+
+## Nearby Skills Inspected
+
+TODO: list each related local or installed Skill, its routing contract, and why
+it is relevant or not relevant.
+
+## Atomic Handoffs
+
+TODO: record each upstream/core/downstream handoff as input artifact, owner,
+output artifact, and acceptance boundary. State explicitly when there is no
+handoff.
+
+## Overlap Decisions
+
+TODO: explain any overlap that should be reused, extended, or intentionally
+kept separate.
+
+## Composition Decision
+
+TODO: state whether this source is a Single Skill or a self-contained Skill Kit
+and why. External sibling Skills remain optional unless their module is embedded
+inside this source.
 """
 
 
@@ -630,8 +682,8 @@ def resolve_install_dir(cli_path: str) -> Optional[Path]:
 
 def normalize_name(value: str) -> str:
     name = value
-    if name.startswith("sgc-"):
-        name = name[len("sgc-") :]
+    if name.startswith("lov-"):
+        name = name[len("lov-") :]
     if name.endswith("-skill"):
         name = name[: -len("-skill")]
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
@@ -647,10 +699,11 @@ def write_skill(path: Path, name: str, kit_section: str, user_config: bool = Fal
     path.write_text(
         SKILL_MD.format(
             name=name,
-            title=f"sgc-{name} — TODO",
+            title=f"lov-{name} — TODO",
             kit_section=kit_section,
             user_profile_section=USER_PROFILE_SKILL_SECTION,
             user_profile_runtime=USER_PROFILE_RUNTIME,
+            skill_composition_section=SKILL_COMPOSITION_SECTION,
         ),
         encoding="utf-8",
     )
@@ -667,6 +720,13 @@ def write_profile_reference(path: Path) -> None:
     (path / "references").mkdir(exist_ok=True)
     (path / "references" / "user-profile.md").write_text(
         USER_PROFILE_MD, encoding="utf-8"
+    )
+
+
+def write_composition_reference(path: Path) -> None:
+    (path / "references").mkdir(exist_ok=True)
+    (path / "references" / "skill-composition.md").write_text(
+        SKILL_COMPOSITION_MD, encoding="utf-8"
     )
 
 
@@ -700,12 +760,12 @@ def write_card_bundle(path: Path, name: str) -> None:
 
 def render_kit(name: str, modules: list[str]) -> tuple[str, str]:
     module_lines = "\n".join(
-        f"- `$SKILL_DIR/skills/{module}/SKILL.md` — `sgc-{module}`"
+        f"- `$SKILL_DIR/skills/{module}/SKILL.md` — `lov-{module}`"
         for module in modules
     )
     module_entries = "\n".join(
         "  - id: {module}\n"
-        "    skill: sgc-{module}\n"
+        "    skill: lov-{module}\n"
         "    path: skills/{module}".format(module=module)
         for module in modules
     )
@@ -722,7 +782,7 @@ def render_kit(name: str, modules: list[str]) -> tuple[str, str]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("name", help="Short name without sgc- or -skill")
+    parser.add_argument("name", help="Short name without lov- or -skill")
     parser.add_argument("--path", default="", help="Custom local source parent")
     parser.add_argument(
         "--install-dir",
@@ -773,7 +833,7 @@ def main() -> int:
     base = resolve_base(args.path)
     skill_dir = base / f"{name}-skill"
     install_dir = resolve_install_dir(args.install_dir)
-    install_path = install_dir / f"sgc-{name}" if install_dir else None
+    install_path = install_dir / f"lov-{name}" if install_dir else None
 
     if skill_dir.exists() or skill_dir.is_symlink():
         print(f"ERROR: source already exists: {skill_dir}", file=sys.stderr)
@@ -797,11 +857,13 @@ def main() -> int:
             write_card_bundle(module_dir, module)
             write_manifest(module_dir, module)
             write_profile_reference(module_dir)
+            write_composition_reference(module_dir)
 
     write_skill(skill_dir / "SKILL.md", name, kit_section, args.user_config)
     write_card_bundle(skill_dir, name)
     write_manifest(skill_dir, name)
     write_profile_reference(skill_dir)
+    write_composition_reference(skill_dir)
     (skill_dir / "README.md").write_text(
         README_MD.format(
             name=name,
@@ -826,6 +888,7 @@ def main() -> int:
     print(f"created={skill_dir.resolve()}")
     print(f"kind={kind}")
     print("profile_contract=user-profile/v1")
+    print("composition_record=references/skill-composition.md")
     print(f"user_config={'compatibility-flag' if args.user_config else 'always-on'}")
     print(f"installed={install_path if install_path else 'pending'}")
     if install_path:

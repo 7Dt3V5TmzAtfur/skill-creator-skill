@@ -1,11 +1,11 @@
 ---
-name: sgc-skill-creator
+name: lov-skill-creator
 description: >
   创建、验证并安装本地 Skill Publisher Skill 或 Skill Kit，并为每个新 Skill 固化真实案例、维度地图、定价依据和分发状态；当用户说“创建 skill”、"create a skill" 或 "scaffold skill kit" 时使用。
 license: MIT
 metadata:
   author: contributors
-  version: "4.2.0"
+  version: "4.3.0"
   tags:
     - skill-creator
     - scaffold
@@ -17,12 +17,12 @@ metadata:
   dependencies: []
 ---
 
-# sgc-skill-creator
+# lov-skill-creator
 
 Create every Skill as a portable local source directory named `{name}-skill`,
 bind it to the shared `user-profile/v1` contract, validate it, and install it
-into the user's local agent skills directory as `sgc-{name}`. Remote repositories, catalogs, marketplace packages,
-uploads, and live-channel verification belong to `sgc-skill-publisher`.
+into the user's local agent skills directory as `lov-{name}`. Remote repositories, catalogs, marketplace packages,
+uploads, and live-channel verification belong to `lov-skill-publisher`.
 
 ## Triggers
 
@@ -34,7 +34,7 @@ uploads, and live-channel verification belong to `sgc-skill-publisher`.
 ### Do not activate when
 
 - 用户只是在调用现有 Skill 完成业务任务。
-- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `sgc-skill-publisher`。
+- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `lov-skill-publisher`。
 
 ## Architecture
 
@@ -56,13 +56,13 @@ uploads, and live-channel verification belong to `sgc-skill-publisher`.
     └── pricing-card.yaml        # value, boundary, and review basis
 
 <agent skills directory>/
-└── sgc-{name} -> <local source root>/{name}-skill
+└── lov-{name} -> <local source root>/{name}-skill
 ```
 
 Key rules:
 
 - Creation ends with a validated, locally discoverable Skill.
-- Source frontmatter name is `sgc-{name}` and uses kebab-case.
+- Source frontmatter name is `lov-{name}` and uses kebab-case.
 - Source top-level fields are limited to `name`, `description`, `license`,
   `allowed-tools`, and `metadata`.
 - Required modules live inside a Skill Kit; no external sibling dependencies.
@@ -113,6 +113,30 @@ Choose automatically and briefly state the result:
 Scripts alone do not justify a Kit. Prefer Single when modularity is marginal.
 For a Kit, list module IDs and named pipeline order before scaffolding.
 
+### Step 2.5: Analyze the nearby Skill group before creating a new one
+
+Before scaffolding, inspect the local Skill source root and installed Skill
+catalog for related capabilities, using their routing descriptions and actual
+input/output contracts rather than names alone. Record the outcome in
+`references/skill-composition.md` for every generated Skill.
+
+Classify each relevant Skill as one of:
+
+- **upstream atom** — independently produces an approved input for this Skill;
+- **core atom** — this new Skill owns the requested user-visible outcome;
+- **downstream atom** — independently consumes the verified output;
+- **overlap** — owns the same outcome and should be extended or selected instead
+  of duplicated; or
+- **not composed** — adjacent in topic but adds no meaningful handoff.
+
+For each proposed handoff, state the concrete artifact or contract, the
+invocation boundary, and who owns the final acceptance criterion. Do not create
+an external sibling dependency merely because another Skill is related. If
+multiple stages are required for one user-visible outcome, embed them as a
+self-contained Skill Kit; otherwise keep the new Skill standalone and describe
+optional handoffs explicitly. A no-composition conclusion is valid only after
+the nearby group was inspected.
+
 ### Step 3: Declare the user Profile contract — always
 
 Every new Skill receives a `skill.yaml` declaration for `user-profile/v1`, even
@@ -151,6 +175,9 @@ Skill Publisher-only branch; different users supply different profile values.
   standalone `scripts/profile_store.py` reader/writer; this is always generated.
 - Skill trust evidence → `skill-card.yaml`, `skill-card.md`,
   `cases/cases.json`, and `pricing-card.yaml`.
+- Skill group decision → `references/skill-composition.md`, including nearby
+  Skills inspected, atomic handoffs, overlap decisions, and the final
+  Single-versus-Kit rationale.
 
 Python scripts must be standalone files without package scaffolding. Treat CJK
 text handling as a core requirement for document and content workflows.
@@ -194,6 +221,8 @@ Write the source as instructions for an agent, not as notes about this chat:
 - Put compatibility, version, tags, and dependencies under `metadata`.
 - Keep the NVIDIA-compatible required card fields intact, then add LovStudio's
   user case, dimension map, pricing basis, and distribution fields.
+- Keep external Skills optional unless they are embedded Kit modules; expose
+  artifact-level handoffs instead of hidden cross-Skill coupling.
 - Use `AskUserQuestion` only for unresolved user-facing product decisions.
 - Never hard-code private paths or personal brand data in reusable source.
 - Fill missing visual/content assets with clearly appropriate generated
@@ -221,9 +250,11 @@ Completion requires:
 7. Every new Skill has at least one verified Input → Prompt → Output case,
    three or more named dimensions with evidence, a pricing basis, and explicit
    paid/free channel states.
+8. `references/skill-composition.md` records the inspected Skill group, atomic
+   handoffs or overlap decision, and why the result is a Single Skill or Kit.
 
 Stop at the local result unless the user also requests publication. When they
-do, invoke `sgc-skill-publisher` with the validated source path and requested
+do, invoke `lov-skill-publisher` with the validated source path and requested
 channels; do not duplicate publishing logic in this Skill.
 
 ## Design Patterns

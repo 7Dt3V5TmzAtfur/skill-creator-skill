@@ -388,6 +388,25 @@ def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
             errors.append(f"{pricing_path}: replace unresolved TODO or template placeholders")
 
 
+def validate_composition_reference(skill_root: Path, errors: list[str]) -> None:
+    path = skill_root / "references" / "skill-composition.md"
+    if not path.is_file():
+        errors.append(f"{path}: required Skill group composition record is missing")
+        return
+    text = read_text(path)
+    required_headings = (
+        "Nearby Skills Inspected",
+        "Atomic Handoffs",
+        "Overlap Decisions",
+        "Composition Decision",
+    )
+    for heading in required_headings:
+        if not re.search(rf"(?mi)^#+\s+{re.escape(heading)}", text):
+            errors.append(f"{path}: add the '{heading}' section")
+    if re.search(r"\bTODO\b|\{[^}]+\}", text, re.I):
+        errors.append(f"{path}: replace unresolved TODO or template placeholders")
+
+
 def validate_kit(root: Path, skill_names: set[str], errors: list[str]) -> None:
     manifest = root / "kit.yaml"
     if not manifest.exists():
@@ -501,6 +520,7 @@ def validate_source(root: Path, errors: list[str]) -> None:
         metadata = data.get("metadata")
         if isinstance(metadata, dict) and metadata.get("card_standard") == CARD_STANDARD:
             validate_card_bundle(path.parent, errors)
+        validate_composition_reference(path.parent, errors)
         validate_runtime_manifest(path.parent, compact_text(data.get("name")), errors)
     validate_kit(root, names, errors)
 

@@ -38,7 +38,7 @@ immediately after the user statement and report the canonical path:
 
 ```bash
 python3 scripts/profile_store.py record \
-  --skill-id sgc-example \
+  --skill-id lov-example \
   --path records.subtitle_level \
   --value '"cet4"' \
   --confirm
@@ -56,7 +56,7 @@ keep it in the current request context.
 
 ```bash
 python3 scripts/profile_store.py read \
-  --skill-id sgc-example \
+  --skill-id lov-example \
   --pretty
 ```
 

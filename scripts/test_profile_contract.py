@@ -40,7 +40,7 @@ class ProfileContractTests(unittest.TestCase):
                     {
                         "user": {"language": "zh-CN"},
                         "brand": {"name": "Example Brand"},
-                        "skills": {"sgc-demo": {"profile": {"watermark": True}}},
+                        "skills": {"lov-demo": {"profile": {"watermark": True}}},
                     }
                 ),
                 encoding="utf-8",
@@ -66,7 +66,7 @@ class ProfileContractTests(unittest.TestCase):
             self.assertEqual(manifest["context"]["profile"]["schema"], "user-profile/v1")
             self.assertEqual(
                 manifest["context"]["profile"]["persist"]["records_path"],
-                "skills.sgc-demo.records",
+                "skills.lov-demo.records",
             )
             self.assertTrue((skill / "references" / "user-profile.md").is_file())
             self.assertTrue((skill / "scripts" / "profile_store.py").is_file())
@@ -77,7 +77,7 @@ class ProfileContractTests(unittest.TestCase):
                     str(skill / "scripts" / "profile_store.py"),
                     "record",
                     "--skill-id",
-                    "sgc-demo",
+                    "lov-demo",
                     "--path",
                     "records.subtitle_level",
                     "--value",
@@ -93,7 +93,7 @@ class ProfileContractTests(unittest.TestCase):
                     str(skill / "scripts" / "profile_store.py"),
                     "record",
                     "--skill-id",
-                    "sgc-demo",
+                    "lov-demo",
                     "--path",
                     "records.subtitle_level",
                     "--value",
@@ -105,8 +105,8 @@ class ProfileContractTests(unittest.TestCase):
             self.assertEqual(saved.returncode, 0, saved.stderr)
             persisted = json.loads(profile.read_text(encoding="utf-8"))
             self.assertEqual(persisted["brand"]["name"], "Example Brand")
-            self.assertEqual(persisted["skills"]["sgc-demo"]["profile"]["watermark"], True)
-            self.assertEqual(persisted["skills"]["sgc-demo"]["records"]["subtitle_level"], "cet4")
+            self.assertEqual(persisted["skills"]["lov-demo"]["profile"]["watermark"], True)
+            self.assertEqual(persisted["skills"]["lov-demo"]["records"]["subtitle_level"], "cet4")
 
             read_back = self.run_command(
                 [
@@ -114,7 +114,7 @@ class ProfileContractTests(unittest.TestCase):
                     str(skill / "scripts" / "profile_store.py"),
                     "read",
                     "--skill-id",
-                    "sgc-demo",
+                    "lov-demo",
                 ],
                 environment,
             )

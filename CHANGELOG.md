@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.0
+
+- Add mandatory nearby-Skill composition analysis and a generated atomic-handoff record.
+
 ## 4.2.0
 
 - Make `user-profile/v1` a default contract for every generated Skill.
@@ -22,7 +26,7 @@
 - Make local source creation, validation, and local installation the complete
   default workflow.
 - Move remote repositories, catalogs, marketplace packaging, uploads, and live
-  verification to the separate `sgc-skill-publisher` capability.
+  verification to the separate `lov-skill-publisher` capability.
 - Infer user configuration from persistent workspace, brand, identity, output,
   locale, and provider needs instead of asking users to choose a mode.
 - Remove the Skill Publisher-internal configuration branch; every source is portable
@@ -117,7 +121,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ### Added
 
 - add portable user configuration scaffolding
-- switch new templates to Agent Skills-compatible sgc-<name> frontmatter
+- switch new templates to Agent Skills-compatible lov-<name> frontmatter
 - generate references/user-config.md for new skills
 - move historical migration notes into references/migration.md for progressive disclosure
 
@@ -141,7 +145,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ### Changed
 
 - Rewrite for per-skill-repo architecture. Each skill is now an independent repo at `skill-publisher/{name}-skill` instead of a subdirectory of a monorepo.
-- Default scaffold path: `~/skill-publisher/coding/skills/{name}-skill/` (was `skills/sgc-{name}/`).
+- Default scaffold path: `~/skill-publisher/coding/skills/{name}-skill/` (was `skills/lov-{name}/`).
 - Install hint: `git clone` each skill repo (replaces `npx skills add skill-publisher/skills`).
 - `init_skill.py`: accepts `--paid`, auto-creates `.gitignore`, and prints `gh repo create` + symlink + index-registration next-steps instead of monorepo-dev-flow hints.
 
@@ -153,7 +157,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ### Removed
 
-- Step 0 (repo choice): `skill-publisher/pro-skills` was archived 2026-04-16. `paid` now lives only in `sgc-general-skills/skills.yaml` as catalog metadata, not as a skill property.
+- Step 0 (repo choice): `skill-publisher/pro-skills` was archived 2026-04-16. `paid` now lives only in `lov-general-skills/skills.yaml` as catalog metadata, not as a skill property.
 
 ## [1.2.0] - 2026-04-15
 
@@ -172,6 +176,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ### Added
 
-- Fix init_skill.py repo detection — prefer sgc-skills over cwd
+- Fix init_skill.py repo detection — prefer lov-skills over cwd
 - README template now includes version badge
 - Remove CHANGELOG from 'What NOT to Include' (managed by skill-optimizer)

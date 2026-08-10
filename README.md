@@ -1,16 +1,20 @@
-# sgc-skill-creator
+# lov-skill-creator
 
-![Version](https://img.shields.io/badge/version-4.2.0-CC785C)
+![Version](https://img.shields.io/badge/version-4.3.0-CC785C)
+
+## Skill 群组原子组合
+
+每次生成或迭代 Skill 前，先分析已有 Skills 的实际输入/输出合同，记录上游、核心、下游、重叠与不组合决策。新源默认携带 `references/skill-composition.md`；外部 sibling Skill 只作为可选交接，硬依赖必须嵌入为自包含 Kit 模块。
 
 创建、验证并安装本地 Skill Publisher Skill 或自包含 Skill Kit。它会根据产品需求自动判断实现形态、Single/Kit 结构，并为每个新 Skill 自动绑定跨 session 的用户 Profile。
 
-远程仓库、目录市场、平台发行包与上传验收由独立的 `sgc-skill-publisher` 负责。
+远程仓库、目录市场、平台发行包与上传验收由独立的 `lov-skill-publisher` 负责。
 
 ## 安装
 
 ```bash
 git clone https://example.com/skills/skill-creator-skill \
-  "${SKILL_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}/sgc-skill-creator"
+  "${SKILL_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}/lov-skill-creator"
 ```
 
 ## 创建本地 Skill
@@ -46,7 +50,7 @@ Creator 的完成标准是：
 4. 触发、非触发以及 Kit 流水线完成基本验收。
 5. 新 Skill 的用户案例、维度地图、定价依据和分发状态全部通过卡片校验。
 
-发布到 Skill Publisher、WorkBuddy 或其他平台时，使用 `sgc-skill-publisher`。
+发布到 Skill Publisher、WorkBuddy 或其他平台时，使用 `lov-skill-publisher`。
 
 ## 依赖
 

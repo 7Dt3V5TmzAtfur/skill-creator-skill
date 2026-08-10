@@ -1,6 +1,6 @@
 schema: skill-manifest/v1
-id: sgc-skill-creator
-version: 4.2.0
+id: lov-skill-creator
+version: 4.3.0
 runtime: skill-runtime/v1
 context:
   profile:
@@ -11,11 +11,11 @@ context:
     - brand
     - workspace
     - preferences
-    - skills.sgc-skill-creator
+    - skills.lov-skill-creator
     persist:
       enabled: true
-      namespace: skills.sgc-skill-creator
-      records_path: skills.sgc-skill-creator.records
+      namespace: skills.lov-skill-creator
+      records_path: skills.lov-skill-creator.records
       write_policy: direct-user-statement
       atomic: true
     fields:
