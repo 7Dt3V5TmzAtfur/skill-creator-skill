@@ -205,6 +205,16 @@ Resolve the install directory from an explicit flag, environment variable,
 shared profile, or the active agent runtime. If it remains unknown, ask once.
 The initializer must reject an occupied install target instead of overwriting it.
 
+> Tool pit: `init_skill.py` 只把 `~/.claude/skills/lov-{name}` 建为指向真源的
+> 绝对 symlink；要符合 Lovstudio 三层链约定，需再补中间层
+> `~/.agents/skills/lov-{name}`（绝对指向真源）并把 install 改成相对
+> `../../.agents/skills/lov-{name}`，`readlink -f` 才会解析到真源
+> （2026-08-20, ab88955）。
+>
+> Tool pit: skills 仓库 working tree 常驻大量未提交改动（其他 skill 的 WIP、
+> 子模块指针），`git add -A` / `git commit -a` 会把它们卷进提交；提交前先
+> `git status`，只 `git add <目标 skill 目录>`（2026-08-20, 99c10a0）。
+
 For cloud-split implementations, read `references/cloud-split.md` completely
 before coding. Keep real logic in the configured cloud handler, return minimal
 symbolic payloads, render symbols locally, and complete its mandatory preflight
