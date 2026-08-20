@@ -221,6 +221,11 @@ The initializer must reject an occupied install target instead of overwriting it
 > Tool pit: 卡片/案例文件里 `dict[str, list[str]]` 这类花括号字面量会被
 > `contains_placeholder` 的 `\{[^}]+\}` 误判为占位符；skill-card / cases /
 > pricing 文件一律避免花括号写法（2026-08-20, 009afde）。
+>
+> Tool pit: `~/lovstudio/coding/skills/skill-creator-skill` 是**嵌套独立 git
+> 仓库**（自带 .git），父仓库 `~/lovstudio/coding/skills` 把它当单个未跟踪目录，
+> 从父仓库 `git add` 内部文件不会生效；改 skill-creator 源要在其自身仓库内提交
+> （2026-08-20, c09a0a1）。
 
 For cloud-split implementations, read `references/cloud-split.md` completely
 before coding. Keep real logic in the configured cloud handler, return minimal
