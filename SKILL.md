@@ -214,6 +214,13 @@ The initializer must reject an occupied install target instead of overwriting it
 > Tool pit: skills 仓库 working tree 常驻大量未提交改动（其他 skill 的 WIP、
 > 子模块指针），`git add -A` / `git commit -a` 会把它们卷进提交；提交前先
 > `git status`，只 `git add <目标 skill 目录>`（2026-08-20, 99c10a0）。
+>
+> Tool pit: `validate_skill.py` 对 description 按「compact 后文本」计 50–200
+> 字符，中英混排极易超 200；先写短版过校验再展开正文（2026-08-20, 009afde）。
+>
+> Tool pit: 卡片/案例文件里 `dict[str, list[str]]` 这类花括号字面量会被
+> `contains_placeholder` 的 `\{[^}]+\}` 误判为占位符；skill-card / cases /
+> pricing 文件一律避免花括号写法（2026-08-20, 009afde）。
 
 For cloud-split implementations, read `references/cloud-split.md` completely
 before coding. Keep real logic in the configured cloud handler, return minimal
