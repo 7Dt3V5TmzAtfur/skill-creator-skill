@@ -20,7 +20,15 @@ except ImportError:
     raise SystemExit(2)
 
 
-FRONTMATTER_KEYS = {"name", "description", "license", "allowed-tools", "metadata"}
+FRONTMATTER_KEYS = {
+    "name",
+    "description",
+    "license",
+    "compatibility",
+    "allowed-tools",
+    "depends_on",
+    "metadata",
+}
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".txt", ".svg", ".py"}
 JUNK_NAMES = {"__pycache__", ".DS_Store"}
 JUNK_SUFFIXES = {".pyc", ".pyo"}
@@ -34,6 +42,12 @@ PRICING_CARD_SCHEMA = "lovstudio/pricing-card/v1"
 MANIFEST_SCHEMA = "skill-manifest/v1"
 RUNTIME_VERSION = "skill-runtime/v1"
 PROFILE_SCHEMA = "user-profile/v1"
+CONTENT_CLASSES = {
+    "authored-prose",
+    "microcopy",
+    "verbatim",
+    "deterministic-output",
+}
 
 
 class ValidationFailure(Exception):
@@ -104,6 +118,18 @@ def validate_skill_file(path: Path, errors: list[str]) -> dict[str, Any] | None:
             f"(found {len(description)})"
         )
 
+    compatibility = compact_text(data.get("compatibility"))
+    if not compatibility:
+        errors.append(f"{path}: compatibility is required at the top level")
+
+    depends_on = data.get("depends_on", [])
+    if isinstance(depends_on, str):
+        depends_on = [depends_on]
+    if not isinstance(depends_on, list) or not all(
+        isinstance(item, str) and NAME_RE.fullmatch(item) for item in depends_on
+    ):
+        errors.append(f"{path}: depends_on must be a list of exact Skill names")
+
     metadata = data.get("metadata")
     if not isinstance(metadata, dict):
         errors.append(f"{path}: metadata must be a mapping")
@@ -117,11 +143,31 @@ def validate_skill_file(path: Path, errors: list[str]) -> dict[str, Any] | None:
             isinstance(tag, str) and tag.strip() for tag in tags
         ):
             errors.append(f"{path}: metadata.tags must be a non-empty list")
-        dependencies = metadata.get("dependencies", [])
-        if not isinstance(dependencies, list):
-            errors.append(f"{path}: metadata.dependencies must be a list")
         if "card_standard" in metadata and metadata.get("card_standard") != CARD_STANDARD:
             errors.append(f"{path}: metadata.card_standard must be {CARD_STANDARD}")
+        content_class = compact_text(metadata.get("content_class"))
+        if content_class and content_class not in CONTENT_CLASSES:
+            errors.append(
+                f"{path}: metadata.content_class must be one of "
+                f"{', '.join(sorted(CONTENT_CLASSES))}"
+            )
+        if content_class in {"authored-prose", "microcopy"} and (
+            not isinstance(depends_on, list)
+            or "lov-branding-consistency" not in depends_on
+        ):
+            errors.append(
+                f"{path}: {content_class} requires lov-branding-consistency"
+            )
+        if content_class == "authored-prose":
+            authorship_reference = path.parent / "references" / "authorship-integrity.md"
+            if not authorship_reference.is_file():
+                errors.append(
+                    f"{authorship_reference}: authored-prose contract is required"
+                )
+            if "references/authorship-integrity.md" not in body:
+                errors.append(
+                    f"{path}: authored-prose must route to references/authorship-integrity.md"
+                )
 
     trigger_block = re.search(
         r"(?ms)^##\s+Triggers\s*$([\s\S]*?)(?=^##\s+|\Z)", body
