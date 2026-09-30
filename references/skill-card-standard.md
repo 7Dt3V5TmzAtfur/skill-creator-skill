@@ -1,13 +1,13 @@
-# LovStudio Skill Card 标准
+# Skill Card 标准
 
-LovStudio 的 Skill Card 采用 NVIDIA Skill Card 的发布记录思路：用户或评审者
+Skill Card 标准 采用 NVIDIA Skill Card 的发布记录思路：用户或评审者
 不打开源代码，也应该能理解 Skill 的用途、负责人、许可、适用场景、部署、依赖、
-风险、输出、版本与伦理边界。LovStudio 在此基础上增加产品可信度所需的四项证据：
+风险、输出、版本与伦理边界。本规范在此基础上增加产品可信度所需的四项证据：
 
 1. 用户案例：至少一个真实的 Input → Prompt → Output，必要时附图片、文件或回读链接。
 2. 维度地图：至少三个维度，每个维度都要写清解释、证据和当前分数状态。
 3. 定价依据：免费也要解释价值、交付边界与复评触发条件；付费不能只写一个数字。
-4. 分发状态：分别声明 `workbuddy`、`skillpay`、`github`、`lovstudio` 是否已发布、审核中或计划中。
+4. 分发状态：分别声明 `workbuddy`、`skillpay`、`github`、`website` 是否已发布、审核中或计划中。
 
 ## 语言类 Skill 的补充
 

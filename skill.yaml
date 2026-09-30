@@ -1,6 +1,6 @@
 schema: skill-manifest/v1
-id: lov-skill-creator
-version: 4.6.5
+id: skill-creator
+version: 4.7.0
 runtime: skill-runtime/v1
 context:
   profile:
@@ -11,11 +11,11 @@ context:
     - brand
     - workspace
     - preferences
-    - skills.lov-skill-creator
+    - skills.skill-creator
     persist:
       enabled: true
-      namespace: skills.lov-skill-creator
-      records_path: skills.lov-skill-creator.records
+      namespace: skills.skill-creator
+      records_path: skills.skill-creator.records
       write_policy: direct-user-statement
       atomic: true
     fields:
@@ -38,7 +38,7 @@ context:
       required: false
       question: 如果已有品牌语气或审美关键词，请提供它们。
   preferences:
-    namespace: lov_skill_creator
+    namespace: skill_creator
     fields:
     - path: user.language
       required: false

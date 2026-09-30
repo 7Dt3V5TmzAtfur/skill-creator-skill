@@ -7,14 +7,12 @@ without remote repositories or platform distribution metadata.
 
 ```yaml
 ---
-name: lov-<name>
+name: <name>
 description: >
   Use 50-200 characters to explain the outcome, supported inputs, and concrete
   Chinese and English trigger phrases.
 license: MIT
 compatibility: "Portable Agent Skills format. List runtime requirements."
-depends_on:
-  - lov-branding-consistency # required for audience-visible text output
 metadata:
   author: skill-publisher
   version: "0.1.0"
@@ -43,10 +41,11 @@ python3 scripts/init_skill.py <name> \
   --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
-`authored-prose` generates `references/authorship-integrity.md` and, like
-`microcopy`, automatically adds `lov-branding-consistency`. `verbatim` protects
-source fidelity. Pure retrieval, storage, deployment, diagnostics, structured
-output, or binary transformation uses `deterministic-output`.
+`authored-prose` generates `references/authorship-integrity.md`. `microcopy` is
+reviewed for clarity and tone against the shared brand Profile. `verbatim`
+protects source fidelity. Pure retrieval, storage, deployment, diagnostics,
+structured output, or binary transformation uses `deterministic-output`. No
+content class injects an external Skill dependency.
 
 Self-contained Skill Kit:
 
@@ -69,13 +68,20 @@ change the generated contract.
 
 ## Completion
 
-- Replace every placeholder.
+- A fresh scaffold passes `python3 scripts/validate_skill.py .` immediately;
+  the run lists which scaffold records still need real evidence.
+- Replace the scaffold trust bundle — `skill-card.yaml`, `skill-card.md`,
+  `cases/cases.json`, `pricing-card.yaml`, and
+  `references/skill-composition.md` — then delete each `scaffold: true` marker.
+- Before release, run `python3 scripts/validate_skill.py . --strict`.
 - Keep every required module and reference inside the source directory.
-- Run `python3 scripts/validate_skill.py .`.
-- Verify the local install symlink resolves to the source.
+- Verify the local install link resolves to the source; symlink, junction, and
+  copy are all acceptable.
 - Exercise trigger routing and at least one Kit pipeline when applicable.
+- A Kit ships one trust bundle at the controller level; add
+  `--with-module-cards` only when a module is published independently.
 
-Remote publication is a separate `lov-skill-publisher` workflow.
+Remote publication is a separate `skill-publisher` workflow.
 
 ## Mandatory Skill group composition record
 

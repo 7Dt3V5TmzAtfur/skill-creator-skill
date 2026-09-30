@@ -34,7 +34,7 @@ def inspect(path: Path) -> dict:
         ("implicit-file-reference", r"(?<!\w)@[\w./-]+"),
         ("shell-interpolation", r"!`|!\$\("),
         ("host-tool", r"AskUserQuestion|TodoWrite|Read\(\*\)|Bash\("),
-        ("legacy-invocation", r"/(?:lovstudio|skill-publisher)/"),
+        ("legacy-invocation", r"/skill-publisher/"),
         ("host-path", r"~/\.(?:claude|codex)/"),
         ("placeholder-domain", r"https?://example\.com"),
     ):
@@ -83,8 +83,7 @@ def prepare(source: Path, destination: Path, name: str, content_class: str) -> d
     (destination / "original.md").write_bytes(original)
     target = destination / (name + "-skill")
     target.mkdir()
-    init_skill.write_skill(target / "SKILL.md", name, "", content_class=content_class,
-                           branding_consistency=content_class in ("microcopy", "authored-prose"))
+    init_skill.write_skill(target / "SKILL.md", name, "", content_class=content_class)
     init_skill.write_manifest(target, name)
     init_skill.write_profile_reference(target)
     init_skill.write_composition_reference(target)

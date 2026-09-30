@@ -15,13 +15,13 @@ client that only orchestrates calls.
 | Carefully tuned prompt engineering | **Yes** |
 | Proprietary data / formulas | **Yes** |
 
-Rule of thumb: if a user grep'ing `~/.claude/projects/*.jsonl` and finding the
+Rule of thumb: if a user grep'ing `$HOME/.claude/projects/*.jsonl` and finding the
 implementation would hurt, cloud-split. Otherwise don't pay the complexity tax.
 
 ## Why this works
 
 Encrypted skills decrypt to stdout → Claude reads → the plaintext is logged to
-`~/.claude/projects/*.jsonl` forever. Anyone with file access can grep it.
+`$HOME/.claude/projects/*.jsonl` forever. Anyone with file access can grep it.
 
 Cloud-split never puts the implementation on the user's disk. The client only
 sees:
@@ -38,7 +38,7 @@ User: /<skill-name> <args>
   ↓
 Claude reads thin SKILL.md
   ↓
-`lov-skill-helper call <skill> --op <op> --input '<json>'`
+`skill-helper call <skill> --op <op> --input '<json>'`
   ↓ HMAC-signed HTTP POST
 Supabase Edge Function `skill_call`
   ↓ verify license + entitlement + device activation
@@ -97,7 +97,7 @@ changes need a new `op` (e.g. `sum_v2`) or a version bump in `skill_version`.
 
 **This is as important as keeping logic server-side.** The skill name + op
 name + input field names + **output field values** all appear in
-`~/.claude/projects/*.jsonl`. Any of these can leak the logic.
+`$HOME/.claude/projects/*.jsonl`. Any of these can leak the logic.
 
 #### 5a. Field names: capability domain, not specific logic
 
@@ -270,7 +270,7 @@ SELECT <license_id>, id, 'dev_test' FROM public.skills WHERE name = '<name>';
 ### 4. Deploy
 
 ```bash
-cd ~/skill-publisher/coding/web
+cd <web-project-root>
 supabase functions deploy skill_call --project-ref nouchjcfeoobplxkwasg
 ```
 
@@ -278,7 +278,7 @@ supabase functions deploy skill_call --project-ref nouchjcfeoobplxkwasg
 
 ```markdown
 ---
-name: lov-<name>
+name: <name>
 description: <one line> ... Trigger when user says "...".
 version: 0.1.0
 ---
@@ -294,7 +294,7 @@ Given user input `<describe shape>`:
 1. Parse into JSON, e.g. `{"field1": "...", "field2": 42}`.
 2. Run:
    ```bash
-   lov-skill-helper call <name> --op primary_op --input '<json>'
+   skill-helper call <name> --op primary_op --input '<json>'
    ```
 3. The CLI prints JSON with shape:
    ```json
@@ -317,7 +317,7 @@ the server. This thin SKILL.md is only the transport layer.
 ### 6. Test end-to-end
 
 ```bash
-lov-skill-helper call <name> --op primary_op --input '{"field1":"x","field2":42}'
+skill-helper call <name> --op primary_op --input '{"field1":"x","field2":42}'
 ```
 
 Expected: JSON output on stdout. Error on stderr for auth/entitlement issues.
@@ -354,7 +354,7 @@ Minimal end-to-end with **actual protection**. Start here.
 - Thin client: `skills/threshold-check-skill/SKILL.md`
   — transport + symbol→text table, zero rule description
 - CLI command:
-  `lov-skill-helper call threshold-check --op evaluate --input '{"params": {"values": [2, 6], "threshold": 10}}'`
+  `skill-helper call threshold-check --op evaluate --input '{"params": {"values": [2, 6], "threshold": 10}}'`
 
 Key patterns to copy:
 - Handler returns a single symbolic field, no derived values, no narration

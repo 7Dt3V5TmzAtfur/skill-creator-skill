@@ -2,7 +2,7 @@
 
 ## 2026-08: v4 local creation and separate publishing
 
-`lov-skill-creator` now ends at validated local installation. Every fresh source
+`skill-creator` now ends at validated local installation. Every fresh source
 also carries the `user-profile/v1` cross-session Profile contract. Remove
 `--distribution`, `--paid`, platform directories, marketplace builders, remote
 repository commands, catalog registration, and live-channel verification from
@@ -11,7 +11,7 @@ compatibility, while Profile generation is always on; pass `--install-dir` for
 local discovery.
 
 Existing platform packaging and release workflows move to
-`lov-skill-publisher`. Historical sections below describe older layouts and
+`skill-publisher`. Historical sections below describe older layouts and
 remain only for migration audits.
 
 ## 2026-07: v3 source/distribution split
@@ -28,12 +28,13 @@ When migrating an existing Skill:
 4. Keep the Skill description between 50 and 200 characters.
 5. Convert controller/sibling relationships into a self-contained `kit.yaml`
    plus embedded `skills/<module>/SKILL.md` paths.
-6. Add `lov-branding-consistency` to `depends_on` when the Skill authors or
-   presents audience-visible text.
+6. Remove any `depends_on` entry that is not embedded in this source; external
+   sibling Skills become optional artifact-level handoffs.
 7. Classify normal output under `metadata.content_class`. For `authored-prose`,
-   add and route to `references/authorship-integrity.md`; for `microcopy`, keep
-   branding review; for `verbatim`, protect source fidelity; for
-   `deterministic-output`, validate correctness and completeness.
+   add and route to `references/authorship-integrity.md`; for `microcopy`,
+   review clarity and tone against the shared brand Profile; for `verbatim`,
+   protect source fidelity; for `deterministic-output`, validate correctness
+   and completeness.
 8. Add WorkBuddy metadata with `--distribution workbuddy` or copy the generated
    profile from a fresh scaffold.
 9. Run `scripts/validate_skill.py` before rebuilding releases.
@@ -68,13 +69,13 @@ The direct-source aggregate model below is retained only as historical context
 and must not be used for new work:
 
 ```bash
-python3 ~/.claude/skills/lov-skill-creator/scripts/init_skill.py tanstack-query --target dev-skills
+python3 "$SKILL_DIR/scripts/init_skill.py" tanstack-query --target dev-skills
 ```
 
-The skill directory is:
+The skill directory was:
 
 ```text
-~/skill-publisher/coding/lov-dev-skills/skills/tanstack-query/
+<configured local source root>/dev-skills/skills/tanstack-query/
 ```
 
 `skills.yaml` must include:
@@ -87,16 +88,16 @@ skill_path: skills/tanstack-query
 ## 2026-04: independent per-skill repos
 
 The ecosystem was refactored from a monorepo (`skill-publisher/skills` containing
-`skills/lov-<name>/`) + mirror (`skill-publisher/pro-skills`) into independent
+`skills/<name>/`) + mirror (`skill-publisher/pro-skills`) into independent
 per-skill repos + central index. The old `skill-publisher/pro-skills` was archived.
 
 If working on a legacy skill still in the old structure, migrate it first:
 
 ```bash
 # 1. Extract from monorepo subdirectory
-cp -r ~/projects/lov-skills/skills/lov-<name> \
-      ~/skill-publisher/coding/skills/<name>-skill
-cd ~/skill-publisher/coding/skills/<name>-skill
+cp -r <old-monorepo-root>/skills/<name> \
+      <configured local source root>/<name>-skill
+cd <configured local source root>/<name>-skill
 
 # 2. Fresh git history
 rm -rf .git

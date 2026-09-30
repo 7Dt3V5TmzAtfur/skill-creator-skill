@@ -8,6 +8,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, Tuple
@@ -21,35 +22,38 @@ CONTENT_CLASSES = (
 )
 
 SKILL_MD = """---
-name: lov-{name}
+name: {name}
 description: >
-  TODO：用 50–200 个字符说明这个 Skill 能完成什么、适用于哪些输入或任务，
-  并自然包含用户会说出的中文与 English 触发语句。
+  {name}：把给定输入转成约定的交付结果，说明支持的输入、产出与边界。Use it to
+  produce that result, e.g. "帮我……" / "create the output". 发布前替换为真实触发语。
 license: MIT
-compatibility: "Portable Agent Skills format. TODO: list runtime requirements."
-{branding_dependency}metadata:
+compatibility: "Portable Agent Skills format. Python 3.8+ and PyYAML when scripts run."
+metadata:
   author: skill-publisher
   version: "0.1.0"
-  card_standard: lovstudio/skill-card/v1
+  card_standard: skill-card/v1
   content_class: {content_class}
   tags:
-    - TODO
+    - {name}
 ---
 
 # {title}
 
-TODO：用一到两句话说明用户得到的结果，不要把内部背景或实现细节写进用户制品。
+{name} 接收明确输入并产出约定结果。本文件是脚手架骨架：发布前把下方各节替换为真实
+工作流与验收标准，并把 `cases/cases.json` 里的示例案例换成一次真实运行。
 
 ## Triggers
 
 ### Activate when
 
-- TODO：列出明确中文触发语，例如“帮我……”
-- TODO: list an explicit English trigger phrase.
+- 用户说“帮我用 {name} 处理……”并给出可执行的输入。
+- The user asks to use {name} to create the stated output.
+- 用户提交与本节输入类型一致的素材、数据或请求。
 
 ### Do not activate when
 
-- TODO：列出相邻但不属于本 Skill 的任务，并说明应交给什么能力。
+- 用户只是咨询概念、闲聊，或没有可执行的输入。
+- 相邻任务属于其他能力时，明确说明应交给什么能力。
 
 {user_profile_section}{kit_section}{skill_composition_section}{authorship_section}## Workflow (MANDATORY)
 
@@ -66,39 +70,39 @@ TODO：用一到两句话说明用户得到的结果，不要把内部背景或�
 When running scripts manually:
 
 ```bash
-export SKILL_DIR="/path/to/lov-{name}"
+export SKILL_DIR="/path/to/{name}"
 ```
 
 {user_profile_runtime}### Step 1: Understand the requested outcome
 
 - Separate internal context from user-visible output.
 - Confirm the input, intended audience, expected deliverable, and evidence gaps.
-- Record one real user case before calling the Skill complete. The case must show
-  the input, the prompt or minimum brief, and the output; do not invent results.
+- Replace the scaffold case in `cases/cases.json` with one real run before
+  release; the case must show input, prompt or brief, and output.
 
 ### Step 1.5: Analyze nearby Skills before implementation
 
 - Inspect related local and installed Skills by routing contract and concrete
   input/output, not by filename alone.
 - Record upstream, core, downstream, overlap, and not-composed decisions in
-  `references/skill-composition.md`.
+  `references/skill-composition.md`, then delete its scaffold marker line.
 - Keep sibling Skills optional and artifact-based. When stages require hard
   coupling for one outcome, create a self-contained Kit instead.
 
 ### Step 2: Execute the workflow
 
-TODO：写出可执行步骤。只有确定性操作需要自定义脚本。
+Describe the executable steps here. Only deterministic operations need scripts.
+Replace this paragraph with the real procedure and its acceptance checks.
 
 ### Step 3: Validate the deliverable
 
 - Verify completeness, factual support, user-visible copy, and output paths.
 - Report concrete files or results, plus any remaining evidence gaps.
-- Validate `skill-card.yaml`, `cases/cases.json`, and `pricing-card.yaml` as the
-  standard trust bundle for this Skill.
+- Run `python3 scripts/validate_skill.py . --strict` before any release.
 
 ## Dependencies
 
-TODO：列出运行依赖；没有额外依赖时明确写 `None`。
+None beyond the runtime declared in `compatibility`.
 """
 
 USER_PROFILE_SKILL_SECTION = """## User Profile (cross-session)
@@ -201,11 +205,11 @@ listed there must ship inside this repository.
 
 """
 
-README_MD = """# lov-{name}
+README_MD = """# {name}
 
 ![Version](https://img.shields.io/badge/version-0.1.0-CC785C)
 
-TODO：用一句话说明用户获得的结果。
+脚手架说明：发布前把本行替换为这个 Skill 交付给用户的具体结果。
 
 ## 本地安装
 
@@ -215,12 +219,12 @@ TODO：用一句话说明用户获得的结果。
 export SKILL_SOURCE_DIR="$(pwd)"
 mkdir -p "${{SKILL_SKILLS_INSTALL_DIR:?请设置本地 Skills 目录}}"
 ln -s "$SKILL_SOURCE_DIR" \
-  "$SKILL_SKILLS_INSTALL_DIR/lov-{name}"
+  "$SKILL_SKILLS_INSTALL_DIR/{name}"
 ```
 
 {configuration_section}## 使用
 
-TODO：提供两个真实示例，并说明输入与输出。
+脚手架说明：发布前补两个真实示例，分别写明输入与输出。
 
 ## 原子组合
 
@@ -252,111 +256,119 @@ python3 scripts/validate_skill.py .
 MIT
 """
 
-SKILL_CARD_YAML = """schema: lovstudio/skill-card/v1
+SKILL_CARD_YAML = """
+schema: skill-card/v1
+scaffold: true
 version: "0.1.0"
-description: "TODO: describe the user-visible outcome in one concise paragraph."
+description: "Scaffold description: replace with the user-visible outcome in one concise paragraph."
 owner:
-  team: "TODO"
-  contact: "TODO"
+  team: "unassigned"
+  contact: "unassigned"
 license:
   name: MIT
-  terms: "TODO: state the terms users should know."
+  terms: "MIT. Replace with any additional usage term a user must know."
   url: "../LICENSE"
 use_case:
-  audience: "TODO"
-  scenario: "TODO"
+  audience: "Scaffold audience: replace with the real audience."
+  scenario: "Scaffold scenario: replace with the real scenario."
   tasks:
-    - "TODO"
+    - "Scaffold task: replace with one real supported task."
 deployment:
   geography: global
   environments:
-    - "TODO"
+    - local
 requirements:
   credentials: "none"
   dependencies: []
   runtime:
-    - "TODO"
+    - "python3"
 risks:
-  - risk: "TODO"
-    mitigation: "TODO"
+  - risk: "Scaffold risk: replace with one real failure or misuse mode."
+    mitigation: "Scaffold mitigation: replace with the real mitigation."
 references:
   - title: "Primary Skill instructions"
     path: "SKILL.md"
 output:
   types:
-    - "TODO"
+    - "Scaffold output type: replace with the real output type."
   formats:
-    - "TODO"
+    - "Scaffold output format: replace with the real format."
   parameters:
-    - "TODO"
+    - "Scaffold parameter: replace with one real parameter."
   validation:
-    - "TODO"
-  description: "TODO"
-ethical_considerations: "TODO: describe privacy, copyright, safety, or misuse boundaries."
+    - "Scaffold validation: replace with one real check."
+  description: "Scaffold output description: replace before release."
+ethical_considerations: "Scaffold boundary: replace with privacy, copyright, safety, or misuse limits."
 dimensions:
   - id: correctness
-    label: "TODO"
-    description: "TODO"
-    evidence: "TODO"
+    label: "Correctness"
+    description: "Scaffold: does the output match the declared contract?"
+    evidence: "Scaffold evidence: replace with the check that produced this answer."
     score: null
   - id: effectiveness
-    label: "TODO"
-    description: "TODO"
-    evidence: "TODO"
+    label: "Effectiveness"
+    description: "Scaffold: does the result solve the user task?"
+    evidence: "Scaffold evidence: replace with the observed run that supports this."
     score: null
   - id: efficiency
-    label: "TODO"
-    description: "TODO"
-    evidence: "TODO"
+    label: "Efficiency"
+    description: "Scaffold: is the cost in steps, tokens, or time acceptable?"
+    evidence: "Scaffold evidence: replace with the measured run that supports this."
     score: null
 pricing:
   model: free
   currency: CNY
   list_price_cny: 0
-  basis: "TODO"
-  boundary: "TODO"
-  review_trigger: "TODO"
+  basis: "Scaffold basis: replace with why this Skill is free or priced."
+  boundary: "Scaffold boundary: replace with what is included and excluded."
+  review_trigger: "Scaffold review trigger: replace with the event that forces a review."
   confidence: internal
 distribution:
   paid: []
   free:
     - github
-    - lovstudio
+    - website
 """
 
-SKILL_CARD_MD = """# Skill Card — lov-{name}
+SKILL_CARD_MD = """
+# Skill Card — {name}
+
+scaffold: true
 
 This human-readable card mirrors `skill-card.yaml`. It is a release record, not
 an implementation note. A reviewer should understand the Skill without opening
-its source.
+its source. Every section below ships as scaffold content; replace it with real
+evidence and delete the `scaffold: true` line above.
 
 ## Description
 
-TODO: state the user-visible outcome.
+Scaffold description: replace with the user-visible outcome.
 
 ## Owner
 
-TODO: state the maintaining team and contact.
+Unassigned. Replace with the maintaining team and contact.
 
 ## License / Terms
 
-TODO: state the license and material usage terms.
+MIT. Replace with the license and any material usage term a user must know.
 
 ## Use Case
 
-TODO: state the audience, supported input, and expected task.
+Scaffold use case: replace with the audience, supported input, and expected task.
 
 ## Deployment Geography
 
-TODO: state where the Skill is intended to run.
+Global, running locally. Replace with the intended runtime scope.
 
 ## Requirements / Dependencies
 
-TODO: list credentials, runtime, files, APIs, and dependencies.
+Python 3.8+ and PyYAML when scripts run. Replace with the real credentials,
+runtime, files, APIs, and dependencies.
 
 ## Known Risks and Mitigations
 
-TODO: list the meaningful failure or misuse modes and their mitigations.
+Scaffold risk: replace with the meaningful failure or misuse modes and how they
+are mitigated.
 
 ## References
 
@@ -365,7 +377,8 @@ TODO: list the meaningful failure or misuse modes and their mitigations.
 
 ## Skill Output
 
-TODO: name the output type, format, parameters, and validation checks.
+Scaffold output: replace with the output type, format, parameters, and
+validation checks.
 
 ## Skill Version
 
@@ -373,13 +386,16 @@ TODO: name the output type, format, parameters, and validation checks.
 
 ## Ethical Considerations
 
-TODO: state privacy, copyright, safety, and attribution boundaries.
+Scaffold boundary: replace with privacy, copyright, safety, and attribution
+limits.
 
-## LovStudio Evidence
+## Trust evidence
 
 ### User Cases
 
-See [`cases/cases.json`](cases/cases.json). Every case must show Input → Prompt → Output.
+See [`cases/cases.json`](cases/cases.json). Every case must show Input → Prompt
+→ Output. The shipped case is a scaffold placeholder until a real run replaces
+it.
 
 ### Dimension Map
 
@@ -387,49 +403,54 @@ The machine-readable card contains the dimensions, evidence, and score status.
 
 ### Pricing Basis
 
-See [`pricing-card.yaml`](pricing-card.yaml). Free Skills still explain their value,
-boundary, and review trigger.
+See [`pricing-card.yaml`](pricing-card.yaml). Free Skills still explain their
+value, boundary, and review trigger.
 
 ### Distribution
 
-Keep paid channels (`workbuddy`, `skillpay`) and free channels (`github`, `lovstudio`)
-explicit. A planned or unavailable channel must not be described as live.
+Keep paid channels (`workbuddy`, `skillpay`) and free channels (`github`,
+`website`) explicit. A planned or unavailable channel must not be described as
+live.
 """
 
-PRICING_CARD_YAML = """schema: lovstudio/pricing-card/v1
+PRICING_CARD_YAML = """
+schema: pricing-card/v1
+scaffold: true
 version: "0.1.0"
 model: free
 currency: CNY
 list_price_cny: 0
-value_anchor: "TODO"
-basis: "TODO: explain the pricing or why this Skill is free."
-boundary: "TODO: state what is included and excluded."
-review_trigger: "TODO: state when the price or access should be revisited."
+value_anchor: "Scaffold value anchor: replace with the outcome a user gets without this Skill."
+basis: "Scaffold basis: replace with why this Skill is free or priced."
+boundary: "Scaffold boundary: replace with what is included and excluded."
+review_trigger: "Scaffold review trigger: replace with the event that forces a review."
 confidence: internal
 """
 
-CASES_JSON = """[
+CASES_JSON = """
+[
   {
     "type": "case",
-    "title": "TODO: name one real user case",
-    "description": "TODO: explain the task and why the result mattered.",
+    "scaffold": true,
+    "title": "Scaffold case: replace with one real run",
+    "description": "Placeholder record that keeps the trust bundle structurally valid. Replace it with a real run, including where the input came from and why the result mattered.",
     "input": {
-      "items": ["TODO: name the real input file, request, or starting state"]
+      "items": ["Scaffold input: replace with the real input file, request, or starting state"]
     },
-    "prompt": "TODO: record the minimum prompt or brief used.",
+    "prompt": "Scaffold prompt: replace with the minimum prompt or brief that produced the result.",
     "output": {
-      "items": ["TODO: name the real output file, result, or decision"]
+      "items": ["Scaffold output: replace with the real output file, result, or decision"]
     }
   }
 ]
 """
 
-CARD_STANDARD_REFERENCE_MD = """# LovStudio Skill Card standard
+CARD_STANDARD_REFERENCE_MD = """# Skill Card standard
 
 `skill-card.yaml` follows the minimum release-record idea of NVIDIA Skill Cards:
 description, owner, license/terms, use case, deployment, requirements,
 risks/mitigations, references, output contract, version, and ethical
-considerations. LovStudio adds evidence that helps a user decide whether the
+considerations. This standard adds evidence that helps a user decide whether the
 Skill is credible:
 
 1. A real user case with Input → Prompt → Output.
@@ -451,7 +472,7 @@ Profile 读取用户、品牌、工作区和本 Skill 的长期记录。用户�
 """
 
 SKILL_MANIFEST_YAML = """schema: skill-manifest/v1
-id: lov-{name}
+id: {name}
 version: "0.1.0"
 runtime: skill-runtime/v1
 context:
@@ -463,11 +484,11 @@ context:
       - brand
       - workspace
       - preferences
-      - skills.lov-{name}
+      - skills.{name}
     persist:
       enabled: true
-      namespace: skills.lov-{name}
-      records_path: skills.lov-{name}.records
+      namespace: skills.{name}
+      records_path: skills.{name}.records
       write_policy: direct-user-statement
       atomic: true
     fields:
@@ -494,7 +515,7 @@ context:
         required: false
         question: 如果已有品牌语气或审美关键词，请提供它们。
   preferences:
-    namespace: lov_{namespace}
+    namespace: {namespace}
     fields:
       - path: user.language
         required: false
@@ -508,9 +529,9 @@ context:
 """
 
 KIT_YAML = """name: {name}
-display_name: "TODO"
+display_name: "{name}"
 version: "0.1.0"
-entrypoint: lov-{name}
+entrypoint: {name}
 modules:
 {module_entries}
 pipelines:
@@ -600,7 +621,7 @@ immediately after the user statement and report the canonical path:
 
 ```bash
 python3 scripts/profile_store.py record \\
-  --skill-id lov-example \\
+  --skill-id example \\
   --path records.subtitle_level \\
   --value '\"cet4\"' \\
   --confirm
@@ -618,7 +639,7 @@ keep it in the current request context.
 
 ```bash
 python3 scripts/profile_store.py read \\
-  --skill-id lov-example \\
+  --skill-id example \\
   --pretty
 ```
 
@@ -633,32 +654,37 @@ invocations. The Profile contract is now always generated; users do not choose
 an initialization mode.
 """
 
-SKILL_COMPOSITION_MD = """# Skill Group Composition
+SKILL_COMPOSITION_MD = """
+# Skill Group Composition
 
-This record is required for every generated Skill. It prevents adjacent Skills
-from becoming accidental duplicates or hidden dependencies.
+scaffold: true
+
+This record ships as scaffold evidence. Inspect the nearby Skill group, replace
+each section with the real finding, then delete the `scaffold: true` line above.
 
 ## Nearby Skills Inspected
 
-TODO: list each related local or installed Skill, its routing contract, and why
-it is relevant or not relevant.
+None recorded yet. Inspect the local Skill source root and the installed Skill
+catalog, then list each related Skill with its routing contract and why it is
+relevant or not relevant.
 
 ## Atomic Handoffs
 
-TODO: record each upstream/core/downstream handoff as input artifact, owner,
-output artifact, and acceptance boundary. State explicitly when there is no
-handoff.
+No handoff recorded yet. Record each upstream/core/downstream handoff as input
+artifact, owner, output artifact, and acceptance boundary. State explicitly when
+there is no handoff.
 
 ## Overlap Decisions
 
-TODO: explain any overlap that should be reused, extended, or intentionally
-kept separate.
+No overlap recorded yet. Explain any overlap that should be reused, extended, or
+intentionally kept separate.
 
 ## Composition Decision
 
-TODO: state whether this source is a Single Skill or a self-contained Skill Kit
-and why. External sibling Skills remain optional unless their module is embedded
-inside this source.
+This scaffold starts as a Single Skill. Replace with the real decision and state
+whether the source is a Single Skill or a self-contained Skill Kit and why.
+External sibling Skills remain optional unless their module is embedded inside
+this source.
 """
 
 
@@ -685,7 +711,7 @@ def _load_profile() -> Tuple[Path, dict]:
         profile = _expand_path(configured)
     else:
         candidates = (
-            Path.home() / ".lovstudio" / "skills" / "profile.json",
+            Path.home() / ".skills" / "skills" / "profile.json",
             Path.home() / ".skill-publisher" / "skills" / "profile.json",
         )
         profile = next(
@@ -744,10 +770,40 @@ def resolve_install_dir(cli_path: str) -> Optional[Path]:
     return _expand_path(profile_value) if profile_value else None
 
 
+def link_source(source: Path, install_path: Path) -> str:
+    """Link the source into the agent skills directory.
+
+    Prefers a real symlink. Falls back to a Windows directory junction and then
+    to a recursive copy, so hosts without symlink permission still end with a
+    working local install instead of a half-created Skill.
+    """
+
+    try:
+        install_path.symlink_to(source, target_is_directory=True)
+        return "symlink"
+    except (OSError, NotImplementedError, AttributeError):
+        pass
+    if os.name == "nt":
+        try:
+            import subprocess
+
+            result = subprocess.run(
+                ["cmd", "/c", "mklink", "/J", str(install_path), str(source)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if result.returncode == 0 and install_path.is_dir():
+                return "junction"
+        except (OSError, subprocess.SubprocessError):
+            pass
+    shutil.copytree(source, install_path)
+    return "copy"
+
+
 def normalize_name(value: str) -> str:
     name = value
-    if name.startswith("lov-"):
-        name = name[len("lov-") :]
     if name.endswith("-skill"):
         name = name[: -len("-skill")]
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
@@ -762,7 +818,6 @@ def write_skill(
     name: str,
     kit_section: str,
     user_config: bool = False,
-    branding_consistency: bool = False,
     content_class: str = "deterministic-output",
 ) -> None:
     """Write a Skill instruction file with the always-on profile contract."""
@@ -770,7 +825,7 @@ def write_skill(
     path.write_text(
         SKILL_MD.format(
             name=name,
-            title=f"lov-{name} — TODO",
+            title=f"{name} — scaffold",
             kit_section=kit_section,
             user_profile_section=USER_PROFILE_SKILL_SECTION,
             user_profile_runtime=USER_PROFILE_RUNTIME,
@@ -779,11 +834,6 @@ def write_skill(
                 AUTHORSHIP_SKILL_SECTION if content_class == "authored-prose" else ""
             ),
             content_class=content_class,
-            branding_dependency=(
-                "depends_on:\n  - lov-branding-consistency\n"
-                if branding_consistency
-                else ""
-            ),
         ),
         encoding="utf-8",
     )
@@ -847,12 +897,12 @@ def write_card_bundle(path: Path, name: str) -> None:
 
 def render_kit(name: str, modules: list[str]) -> tuple[str, str]:
     module_lines = "\n".join(
-        f"- `$SKILL_DIR/skills/{module}/SKILL.md` — `lov-{module}`"
+        f"- `$SKILL_DIR/skills/{module}/SKILL.md` — `{module}`"
         for module in modules
     )
     module_entries = "\n".join(
         "  - id: {module}\n"
-        "    skill: lov-{module}\n"
+        "    skill: {module}\n"
         "    path: skills/{module}".format(module=module)
         for module in modules
     )
@@ -869,7 +919,7 @@ def render_kit(name: str, modules: list[str]) -> tuple[str, str]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("name", help="Short name without lov- or -skill")
+    parser.add_argument("name", help="Short name without the -skill suffix")
     parser.add_argument("--path", default="", help="Custom local source parent")
     parser.add_argument(
         "--install-dir",
@@ -887,9 +937,9 @@ def parse_args() -> argparse.Namespace:
         help="Create a Skill Kit controller and embedded child modules",
     )
     parser.add_argument(
-        "--branding-consistency",
+        "--with-module-cards",
         action="store_true",
-        help="Declare lov-branding-consistency for audience-visible text output",
+        help="Also generate a trust bundle per embedded module (requires --kit)",
     )
     parser.add_argument(
         "--content-class",
@@ -934,16 +984,15 @@ def main() -> int:
         print("ERROR: --authored-prose conflicts with --content-class", file=sys.stderr)
         return 1
     content_class = "authored-prose" if args.authored_prose else args.content_class
-    branding_consistency = args.branding_consistency or content_class in (
-        "authored-prose",
-        "microcopy",
-    )
 
     if args.module and not args.kit:
         print("ERROR: --module requires --kit", file=sys.stderr)
         return 1
     if args.module_content_class and not args.kit:
         print("ERROR: --module-content-class requires --kit", file=sys.stderr)
+        return 1
+    if args.with_module_cards and not args.kit:
+        print("ERROR: --with-module-cards requires --kit", file=sys.stderr)
         return 1
     if args.kit and not modules:
         print("ERROR: --kit requires at least one --module", file=sys.stderr)
@@ -987,7 +1036,7 @@ def main() -> int:
     base = resolve_base(args.path)
     skill_dir = base / f"{name}-skill"
     install_dir = resolve_install_dir(args.install_dir)
-    install_path = install_dir / f"lov-{name}" if install_dir else None
+    install_path = install_dir / f"{name}" if install_dir else None
 
     if skill_dir.exists() or skill_dir.is_symlink():
         print(f"ERROR: source already exists: {skill_dir}", file=sys.stderr)
@@ -1008,19 +1057,15 @@ def main() -> int:
             module_dir = skill_dir / "skills" / module
             module_dir.mkdir(parents=True)
             module_content_class = module_content_classes.get(module, content_class)
-            module_branding_consistency = (
-                args.branding_consistency
-                or module_content_class in ("authored-prose", "microcopy")
-            )
             write_skill(
                 module_dir / "SKILL.md",
                 module,
                 "",
                 args.user_config,
-                module_branding_consistency,
                 module_content_class,
             )
-            write_card_bundle(module_dir, module)
+            if args.with_module_cards:
+                write_card_bundle(module_dir, module)
             write_manifest(module_dir, module)
             write_profile_reference(module_dir)
             write_composition_reference(module_dir)
@@ -1032,7 +1077,6 @@ def main() -> int:
         name,
         kit_section,
         args.user_config,
-        branding_consistency,
         content_class,
     )
     write_card_bundle(skill_dir, name)
@@ -1057,9 +1101,10 @@ def main() -> int:
     for module in modules:
         copy_runtime_scripts(skill_dir / "skills" / module, script_root)
 
+    link_mode = "none"
     if install_path:
         install_dir.mkdir(parents=True, exist_ok=True)
-        install_path.symlink_to(skill_dir.resolve(), target_is_directory=True)
+        link_mode = link_source(skill_dir.resolve(), install_path)
 
     kind = "Skill Kit" if args.kit else "Skill"
     print(f"created={skill_dir.resolve()}")
@@ -1072,12 +1117,14 @@ def main() -> int:
             f"module_content_class.{module}="
             f"{module_content_classes.get(module, content_class)}"
         )
-    print(f"branding_consistency={'enabled' if branding_consistency else 'not-applicable'}")
+    print(f"module_cards={'per-module' if args.with_module_cards else 'controller-only' if args.kit else 'not-applicable'}")
     print(f"user_config={'compatibility-flag' if args.user_config else 'always-on'}")
+    print(f"link_mode={link_mode}")
     print(f"installed={install_path if install_path else 'pending'}")
     if install_path:
         print(f"install_target={install_path.resolve()}")
     print("validation=python3 scripts/validate_skill.py .")
+    print("release_gate=python3 scripts/validate_skill.py . --strict")
     if not install_path:
         print("next=resolve a local agent skills directory and install the source")
     else:

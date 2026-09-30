@@ -44,7 +44,7 @@ def profile_path(explicit: Path | None = None) -> Path:
     if configured:
         return Path(os.path.expandvars(configured)).expanduser()
     candidates = (
-        Path.home() / ".lovstudio" / "skills" / "profile.json",
+        Path.home() / ".skills" / "skills" / "profile.json",
         Path.home() / ".skill-publisher" / "skills" / "profile.json",
         config_dir() / "profile.json",
     )

@@ -52,7 +52,7 @@ an external business write. Record untested runtime branches honestly.
 Install through a shared canonical Skill directory and host adapters; verify
 their resolved targets. Retain original commands unless removal is requested.
 When the user requests website synchronization, hand each validated source and
-the complete mapping to `lov-skill-publisher` within that authorization. Verify
+the complete mapping to `skill-publisher` within that authorization. Verify
 the exact catalog version, public detail content and isolated installation for
 every published capability. Unselected channels remain unselected. A broken item
 must be visible in the batch report and must not erase successful results.
@@ -60,5 +60,5 @@ must be visible in the batch report and must not erase successful results.
 ## Format sources
 
 The [Agent Skills specification](https://agentskills.io/specification) defines the
-portable base. LovStudio additionally requires its Profile, card and dependency
+portable base. This standard additionally requires its Profile, card and dependency
 contracts; these extensions must not become a dependency on a particular host.

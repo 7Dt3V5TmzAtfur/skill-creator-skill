@@ -41,7 +41,7 @@ class ProfileContractTests(unittest.TestCase):
                     {
                         "user": {"language": "zh-CN"},
                         "brand": {"name": "Example Brand"},
-                        "skills": {"lov-demo": {"profile": {"watermark": True}}},
+                        "skills": {"demo": {"profile": {"watermark": True}}},
                     }
                 ),
                 encoding="utf-8",
@@ -67,7 +67,7 @@ class ProfileContractTests(unittest.TestCase):
             self.assertEqual(manifest["context"]["profile"]["schema"], "user-profile/v1")
             self.assertEqual(
                 manifest["context"]["profile"]["persist"]["records_path"],
-                "skills.lov-demo.records",
+                "skills.demo.records",
             )
             self.assertTrue((skill / "references" / "user-profile.md").is_file())
             self.assertTrue((skill / "scripts" / "profile_store.py").is_file())
@@ -83,7 +83,7 @@ class ProfileContractTests(unittest.TestCase):
                     str(skill / "scripts" / "profile_store.py"),
                     "record",
                     "--skill-id",
-                    "lov-demo",
+                    "demo",
                     "--path",
                     "records.subtitle_level",
                     "--value",
@@ -99,7 +99,7 @@ class ProfileContractTests(unittest.TestCase):
                     str(skill / "scripts" / "profile_store.py"),
                     "record",
                     "--skill-id",
-                    "lov-demo",
+                    "demo",
                     "--path",
                     "records.subtitle_level",
                     "--value",
@@ -111,8 +111,8 @@ class ProfileContractTests(unittest.TestCase):
             self.assertEqual(saved.returncode, 0, saved.stderr)
             persisted = json.loads(profile.read_text(encoding="utf-8"))
             self.assertEqual(persisted["brand"]["name"], "Example Brand")
-            self.assertEqual(persisted["skills"]["lov-demo"]["profile"]["watermark"], True)
-            self.assertEqual(persisted["skills"]["lov-demo"]["records"]["subtitle_level"], "cet4")
+            self.assertEqual(persisted["skills"]["demo"]["profile"]["watermark"], True)
+            self.assertEqual(persisted["skills"]["demo"]["records"]["subtitle_level"], "cet4")
 
             read_back = self.run_command(
                 [
@@ -120,7 +120,7 @@ class ProfileContractTests(unittest.TestCase):
                     str(skill / "scripts" / "profile_store.py"),
                     "read",
                     "--skill-id",
-                    "lov-demo",
+                    "demo",
                 ],
                 environment,
             )
@@ -129,7 +129,7 @@ class ProfileContractTests(unittest.TestCase):
             self.assertEqual(context["brand"]["name"], "Example Brand")
             self.assertEqual(context["records"]["subtitle_level"], "cet4")
 
-    def test_authored_prose_generates_integrity_contract_and_brand_gate(self) -> None:
+    def test_authored_prose_generates_integrity_contract_without_external_dependency(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary)
             result = self.run_command(
@@ -149,14 +149,14 @@ class ProfileContractTests(unittest.TestCase):
             text = (skill / "SKILL.md").read_text(encoding="utf-8")
             skill_data = yaml.safe_load(text.split("---", 2)[1])
             self.assertEqual(skill_data["metadata"]["content_class"], "authored-prose")
-            self.assertIn("lov-branding-consistency", skill_data["depends_on"])
+            self.assertIsNone(skill_data.get("depends_on"))
             self.assertIn("references/authorship-integrity.md", text)
             self.assertTrue(
                 (skill / "references" / "authorship-integrity.md").is_file()
             )
             self.assertIn("content_class=authored-prose", result.stdout)
 
-    def test_microcopy_adds_brand_gate_without_long_form_contract(self) -> None:
+    def test_microcopy_skips_long_form_contract_without_external_dependency(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary)
             result = self.run_command(
@@ -175,7 +175,7 @@ class ProfileContractTests(unittest.TestCase):
             skill = workspace / "ui-copy-skill"
             text = (skill / "SKILL.md").read_text(encoding="utf-8")
             skill_data = yaml.safe_load(text.split("---", 2)[1])
-            self.assertIn("lov-branding-consistency", skill_data["depends_on"])
+            self.assertIsNone(skill_data.get("depends_on"))
             self.assertFalse(
                 (skill / "references" / "authorship-integrity.md").exists()
             )

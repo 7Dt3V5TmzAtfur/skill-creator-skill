@@ -27,7 +27,7 @@ FRONTMATTER_KEYS = {
     "compatibility",
     "allowed-tools",
     "depends_on",
-    # lovstudio CLI install preflight: [{name, check, install}], hinted on install,
+    # CLI install preflight: [{name, check, install}], hinted on install,
     # installed only with --with-deps (optional companions, unlike depends_on).
     "dependencies",
     "metadata",
@@ -35,13 +35,13 @@ FRONTMATTER_KEYS = {
 TEXT_SUFFIXES = {".md", ".json", ".yaml", ".yml", ".txt", ".svg", ".py"}
 JUNK_NAMES = {"__pycache__", ".DS_Store"}
 JUNK_SUFFIXES = {".pyc", ".pyo"}
-SKIP_DIRS = {".git", "dist", ".venv", "venv", "node_modules"}
+SKIP_DIRS = {".git", ".workbuddy", "dist", ".venv", "venv", "node_modules"}
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$")
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*]\(([^)]+)\)")
 SKILL_PATH_RE = re.compile(r"\$(SKILL_DIR|KIT_DIR)/([A-Za-z0-9_./-]+)")
-CARD_STANDARD = "lovstudio/skill-card/v1"
-PRICING_CARD_SCHEMA = "lovstudio/pricing-card/v1"
+CARD_STANDARD = "skill-card/v1"
+PRICING_CARD_SCHEMA = "pricing-card/v1"
 MANIFEST_SCHEMA = "skill-manifest/v1"
 RUNTIME_VERSION = "skill-runtime/v1"
 PROFILE_SCHEMA = "user-profile/v1"
@@ -99,7 +99,9 @@ def is_relative_to(path: Path, parent: Path) -> bool:
         return False
 
 
-def validate_skill_file(path: Path, errors: list[str]) -> dict[str, Any] | None:
+def validate_skill_file(
+    path: Path, errors: list[str], warnings: list[str], strict: bool = False
+) -> dict[str, Any] | None:
     try:
         data, body = split_frontmatter(path)
     except ValidationFailure as exc:
@@ -144,7 +146,7 @@ def validate_skill_file(path: Path, errors: list[str]) -> dict[str, Any] | None:
     ):
         errors.append(
             f"{path}: dependencies must be a list of {{name, check, install}} entries "
-            "(the lovstudio CLI install preflight)"
+            "(the CLI install preflight)"
         )
 
     metadata = data.get("metadata")
@@ -168,12 +170,10 @@ def validate_skill_file(path: Path, errors: list[str]) -> dict[str, Any] | None:
                 f"{path}: metadata.content_class must be one of "
                 f"{', '.join(sorted(CONTENT_CLASSES))}"
             )
-        if content_class in {"authored-prose", "microcopy"} and (
-            not isinstance(depends_on, list)
-            or "lov-branding-consistency" not in depends_on
-        ):
-            errors.append(
-                f"{path}: {content_class} requires lov-branding-consistency"
+        if depends_on and len(depends_on) > 0 and not strict:
+            warnings.append(
+                f"{path}: depends_on declares {', '.join(depends_on)}; every entry "
+                "must be embedded in this source"
             )
         if content_class == "authored-prose":
             authorship_reference = path.parent / "references" / "authorship-integrity.md"
@@ -322,6 +322,19 @@ def validate_manifest_fields(
             errors.append(f"{label}.aliases must be a list of paths")
 
 
+def is_scaffold_text(text: str) -> bool:
+    return bool(re.search(r"(?mi)^scaffold:\s*true\s*$", text))
+
+
+def report_scaffold(errors: list[str], warnings: list[str], strict: bool, message: str) -> None:
+    """Scaffold evidence passes locally and fails the release gate."""
+
+    if strict:
+        errors.append(message)
+    else:
+        warnings.append("scaffold: " + message)
+
+
 def has_content(value: Any) -> bool:
     if isinstance(value, str):
         return bool(value.strip())
@@ -342,7 +355,9 @@ def contains_placeholder(value: Any) -> bool:
     return False
 
 
-def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
+def validate_card_bundle(
+    skill_root: Path, errors: list[str], warnings: list[str], strict: bool = False
+) -> None:
     card_path = skill_root / "skill-card.yaml"
     card_doc_path = skill_root / "skill-card.md"
     cases_path = skill_root / "cases" / "cases.json"
@@ -353,6 +368,11 @@ def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
             errors.append(f"{path}: required Skill trust-bundle file is missing")
 
     card = load_yaml(card_path, errors) if card_path.is_file() else None
+    if card is not None and card.get("scaffold") is True:
+        report_scaffold(
+            errors, warnings, strict,
+            f"{card_path}: replace scaffold trust evidence before release",
+        )
     if card is not None:
         if card.get("schema") != CARD_STANDARD:
             errors.append(f"{card_path}: schema must be {CARD_STANDARD}")
@@ -407,6 +427,11 @@ def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
                 errors.append(f"{card_doc_path}: add the '{heading}' section")
         if re.search(r"\bTODO\b|\{[^}]+\}", card_doc, re.I):
             errors.append(f"{card_doc_path}: replace unresolved TODO or template placeholders")
+        if is_scaffold_text(card_doc):
+            report_scaffold(
+                errors, warnings, strict,
+                f"{card_doc_path}: replace scaffold card content before release",
+            )
 
     if cases_path.is_file():
         try:
@@ -427,6 +452,11 @@ def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
                         errors.append(f"{label}: '{key}' is required")
                 if contains_placeholder(case):
                     errors.append(f"{label}: replace unresolved TODO or template placeholders")
+                if case.get("scaffold") is True:
+                    report_scaffold(
+                        errors, warnings, strict,
+                        f"{label}: replace the scaffold case with a real Input → Prompt → Output run",
+                    )
                 for image_key in ("cover", "gallery"):
                     image_values = case.get(image_key, [])
                     if isinstance(image_values, str):
@@ -441,6 +471,11 @@ def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
                             errors.append(f"{label}: case asset does not exist: {image}")
 
     pricing = load_yaml(pricing_path, errors) if pricing_path.is_file() else None
+    if pricing is not None and pricing.get("scaffold") is True:
+        report_scaffold(
+            errors, warnings, strict,
+            f"{pricing_path}: replace scaffold pricing evidence before release",
+        )
     if pricing is not None:
         if pricing.get("schema") != PRICING_CARD_SCHEMA:
             errors.append(f"{pricing_path}: schema must be {PRICING_CARD_SCHEMA}")
@@ -451,7 +486,9 @@ def validate_card_bundle(skill_root: Path, errors: list[str]) -> None:
             errors.append(f"{pricing_path}: replace unresolved TODO or template placeholders")
 
 
-def validate_composition_reference(skill_root: Path, errors: list[str]) -> None:
+def validate_composition_reference(
+    skill_root: Path, errors: list[str], warnings: list[str], strict: bool = False
+) -> None:
     path = skill_root / "references" / "skill-composition.md"
     if not path.is_file():
         errors.append(f"{path}: required Skill group composition record is missing")
@@ -468,6 +505,11 @@ def validate_composition_reference(skill_root: Path, errors: list[str]) -> None:
             errors.append(f"{path}: add the '{heading}' section")
     if re.search(r"\bTODO\b|\{[^}]+\}", text, re.I):
         errors.append(f"{path}: replace unresolved TODO or template placeholders")
+    if is_scaffold_text(text):
+        report_scaffold(
+            errors, warnings, strict,
+            f"{path}: inspect the nearby Skill group and replace the scaffold record",
+        )
 
 
 def validate_kit(root: Path, skill_names: set[str], errors: list[str]) -> None:
@@ -544,7 +586,9 @@ def validate_local_references(root: Path, errors: list[str]) -> None:
 
 
 def validate_hygiene(root: Path, errors: list[str]) -> None:
-    private_path = re.compile(r"(?:/Users/[^/\s]+/|[A-Za-z]:\\\\Users\\\\[^\\\s]+\\\\)")
+    private_path = re.compile(
+        r"(?:/Users/[^/\s]+/|/home/[^/\s]+/|[A-Za-z]:\\\\Users\\\\[^\\\s]+\\\\|~/(?:[A-Za-z0-9._-]+/)+)"
+    )
     for path in root.rglob("*"):
         if any(part in SKIP_DIRS for part in path.relative_to(root).parts):
             continue
@@ -565,7 +609,7 @@ def validate_hygiene(root: Path, errors: list[str]) -> None:
             )
 
 
-def validate_source(root: Path, errors: list[str]) -> None:
+def validate_source(root: Path, errors: list[str], warnings: list[str], strict: bool = False) -> None:
     root_skill = root / "SKILL.md"
     skill_files = [root_skill, *sorted((root / "skills").glob("*/SKILL.md"))]
     if not root_skill.is_file():
@@ -573,7 +617,7 @@ def validate_source(root: Path, errors: list[str]) -> None:
         return
     parsed: list[tuple[Path, dict[str, Any]]] = []
     for path in skill_files:
-        data = validate_skill_file(path, errors)
+        data = validate_skill_file(path, errors, warnings, strict)
         if data:
             parsed.append((path, data))
     names = {compact_text(data.get("name")) for _, data in parsed}
@@ -582,8 +626,10 @@ def validate_source(root: Path, errors: list[str]) -> None:
     for path, data in parsed:
         metadata = data.get("metadata")
         if isinstance(metadata, dict) and metadata.get("card_standard") == CARD_STANDARD:
-            validate_card_bundle(path.parent, errors)
-        validate_composition_reference(path.parent, errors)
+            # Kit modules inherit the controller trust bundle unless they ship their own.
+            if path.parent == root or (path.parent / "skill-card.yaml").is_file():
+                validate_card_bundle(path.parent, errors, warnings, strict)
+        validate_composition_reference(path.parent, errors, warnings, strict)
         validate_runtime_manifest(path.parent, compact_text(data.get("name")), errors)
     validate_kit(root, names, errors)
 
@@ -603,19 +649,31 @@ def validate_source(root: Path, errors: list[str]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", type=Path, help="Local Skill source directory")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Treat scaffold evidence as an error; use before release",
+    )
     args = parser.parse_args()
     root = args.path.expanduser().resolve()
     if not root.is_dir():
         print(f"ERROR: directory does not exist: {root}", file=sys.stderr)
         return 2
     errors: list[str] = []
-    validate_source(root, errors)
+    warnings: list[str] = []
+    validate_source(root, errors, warnings, args.strict)
     if errors:
         print(f"FAILED: {len(errors)} issue(s)")
         for error in errors:
             print(f"- {error}")
+        for warning in warnings:
+            print(f"- {warning}")
         return 1
     print(f"PASSED: source validation ({root})")
+    if warnings:
+        print(f"scaffold: {len(warnings)} record(s) still need real evidence")
+        for warning in warnings:
+            print(f"- {warning}")
     return 0
 
 

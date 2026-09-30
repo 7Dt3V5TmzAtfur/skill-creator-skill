@@ -1,5 +1,36 @@
 # Changelog
 
+## [4.7.0] - 2026-10-01
+
+### Added
+
+- Scaffold trust bundle: `skill-card.yaml`, `skill-card.md`, `cases/cases.json`,
+  `pricing-card.yaml`, and `references/skill-composition.md` now ship with
+  structurally valid example content marked `scaffold: true`, so a fresh source
+  passes `validate_skill.py` immediately.
+- `validate_skill.py --strict` promotes every scaffold record to an error and is
+  the release gate before any publisher handoff.
+- `--with-module-cards`: Skill Kit modules inherit the controller trust bundle by
+  default instead of repeating five records per module.
+- Install fallback chain: symlink, then Windows directory junction, then copy,
+  with the chosen mode reported as `link_mode`.
+
+### Changed
+
+- Removed the `lov-` prefix everywhere, including the `lovstudio` schema names.
+  Card and pricing schemas are now `skill-card/v1` and `pricing-card/v1`.
+- Removed the external `lov-branding-consistency` dependency. `depends_on` may
+  only list capabilities embedded in the source; external Skills stay optional
+  artifact-level handoffs.
+- Private-path detection now covers POSIX home directories and `~/` prefixed
+  paths in addition to macOS and Windows user directories, and skips
+  `.workbuddy` directories.
+- Migration examples use configured source roots instead of personal paths.
+
+### Fixed
+
+- `mklink` output decoding no longer raises on non-UTF-8 Windows locales.
+
 ## [4.6.5] - 2026-09-28
 
 ### Fixed
@@ -65,7 +96,7 @@
 - Make local source creation, validation, and local installation the complete
   default workflow.
 - Move remote repositories, catalogs, marketplace packaging, uploads, and live
-  verification to the separate `lov-skill-publisher` capability.
+  verification to the separate `skill-publisher` capability.
 - Infer user configuration from persistent workspace, brand, identity, output,
   locale, and provider needs instead of asking users to choose a mode.
 - Remove the Skill Publisher-internal configuration branch; every source is portable
@@ -143,7 +174,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ### Added
 
-- move default skill profile under ~/.skill-publisher
+- move default skill profile under the configured skills config directory
 - keep AGENT_SKILL_PROFILE as the portable override
 - default generated brand/design config paths to ${SKILLS_CONFIG_DIR}
 
@@ -160,7 +191,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ### Added
 
 - add portable user configuration scaffolding
-- switch new templates to Agent Skills-compatible lov-<name> frontmatter
+- switch new templates to Agent Skills-compatible <name> frontmatter
 - generate references/user-config.md for new skills
 - move historical migration notes into references/migration.md for progressive disclosure
 
@@ -184,7 +215,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ### Changed
 
 - Rewrite for per-skill-repo architecture. Each skill is now an independent repo at `skill-publisher/{name}-skill` instead of a subdirectory of a monorepo.
-- Default scaffold path: `~/skill-publisher/coding/skills/{name}-skill/` (was `skills/lov-{name}/`).
+- Default scaffold path: `<configured local source root>/{name}-skill/` (was `skills/{name}/`).
 - Install hint: `git clone` each skill repo (replaces `npx skills add skill-publisher/skills`).
 - `init_skill.py`: accepts `--paid`, auto-creates `.gitignore`, and prints `gh repo create` + symlink + index-registration next-steps instead of monorepo-dev-flow hints.
 
@@ -196,7 +227,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ### Removed
 
-- Step 0 (repo choice): `skill-publisher/pro-skills` was archived 2026-04-16. `paid` now lives only in `lov-general-skills/skills.yaml` as catalog metadata, not as a skill property.
+- Step 0 (repo choice): `skill-publisher/pro-skills` was archived 2026-04-16. `paid` now lives only in `general-skills/skills.yaml` as catalog metadata, not as a skill property.
 
 ## [1.2.0] - 2026-04-15
 
@@ -215,6 +246,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ### Added
 
-- Fix init_skill.py repo detection — prefer lov-skills over cwd
+- Fix init_skill.py repo detection — prefer skills over cwd
 - README template now includes version badge
 - Remove CHANGELOG from 'What NOT to Include' (managed by skill-optimizer)

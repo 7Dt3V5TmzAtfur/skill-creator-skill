@@ -1,12 +1,12 @@
 # Skill Publisher Local Skill Source Standard
 
 This standard covers creation, validation, and local installation. Publication
-and channel packaging belong to `lov-skill-publisher`.
+and channel packaging belong to `skill-publisher`.
 
 ## Naming and source
 
 - Local source directory: `<name>-skill`.
-- Frontmatter and installed directory: `lov-<name>`.
+- Frontmatter and installed directory: `<name>`.
 - Names use lowercase letters, numbers, and single hyphens.
 - Display names prioritize accuracy, brevity, elegance and consistency, guided
   by the user's approved examples. Favor short, memorable product names; role
@@ -23,8 +23,9 @@ and channel packaging belong to `lov-skill-publisher`.
 - Source top-level fields are `name`, `description`, `license`, `compatibility`,
   `allowed-tools`, `depends_on`, and `metadata`; version and tags live in
   `metadata`.
-- Any Skill that authors or presents audience-visible text declares
-  `lov-branding-consistency` in top-level `depends_on`.
+- `depends_on` may only list capabilities embedded in this source. Any external
+  sibling Skill stays an optional, artifact-level handoff that the Skill must
+  degrade gracefully without.
 - New sources classify normal output in `metadata.content_class` as
   `authored-prose`, `microcopy`, `verbatim`, or `deterministic-output`.
 
@@ -32,10 +33,10 @@ and channel packaging belong to `lov-skill-publisher`.
 
 - `authored-prose` covers articles, reports, scripts, letters, and prose where
   the writer's reasoning and editorial decisions are part of the result. It
-  requires `lov-branding-consistency` plus
-  `references/authorship-integrity.md`.
+  requires `references/authorship-integrity.md`.
 - `microcopy` covers short audience-visible labels, descriptions, prompts, and
-  notices. It requires `lov-branding-consistency` but not a long-form ledger.
+  notices. It is reviewed for clarity and tone against the shared brand Profile,
+  with no long-form ledger.
 - `verbatim` covers transcripts, quotations, legal text, identifiers, and other
   material whose acceptance criterion is source fidelity.
 - `deterministic-output` covers structured, operational, retrieval, storage,

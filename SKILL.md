@@ -1,14 +1,12 @@
 ---
-name: lov-skill-creator
+name: skill-creator
 description: >
   创建、验证、安装通用 Skill 或 Skill Kit；将旧 slash command、命令目录及半迁移 Skill 升级为可跨宿主使用的能力。Use to create a skill, migrate slash commands, or scaffold a skill kit.
 license: MIT
 compatibility: "Python 3.8+ and PyYAML. Git is optional for local source history."
-depends_on:
-  - lov-branding-consistency
 metadata:
   author: contributors
-  version: "4.6.5"
+  version: "4.7.0"
   content_class: deterministic-output
   tags:
     - skill-creator
@@ -23,8 +21,8 @@ metadata:
 
 Create every Skill as a portable local source directory named `{name}-skill`,
 bind it to the shared `user-profile/v1` contract, validate it, and install it
-into the user's local agent skills directory as `lov-{name}`. Remote repositories, catalogs, marketplace packages,
-uploads, and live-channel verification belong to `lov-skill-publisher`.
+into the user's local agent skills directory as `{name}`. Remote repositories, catalogs, marketplace packages,
+uploads, and live-channel verification belong to `skill-publisher`.
 
 ## Triggers
 
@@ -37,7 +35,7 @@ uploads, and live-channel verification belong to `lov-skill-publisher`.
 ### Do not activate when
 
 - 用户只是在调用现有 Skill 完成业务任务。
-- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `lov-skill-publisher`。
+- 用户要发布远程仓库、上架目录、生成平台发行包或上传 Skill；交给 `skill-publisher`。
 
 ## Architecture
 
@@ -59,13 +57,13 @@ uploads, and live-channel verification belong to `lov-skill-publisher`.
     └── pricing-card.yaml        # value, boundary, and review basis
 
 <agent skills directory>/
-└── lov-{name} -> <local source root>/{name}-skill
+└── {name} -> <local source root>/{name}-skill
 ```
 
 Key rules:
 
 - Creation ends with a validated, locally discoverable Skill.
-- Source frontmatter name is `lov-{name}` and uses kebab-case.
+- Source frontmatter name is `{name}` and uses kebab-case.
 - Source top-level fields are limited to `name`, `description`, `license`,
   `compatibility`, `allowed-tools`, `depends_on`, and `metadata`.
 - Required modules live inside a Skill Kit; no external sibling dependencies.
@@ -74,20 +72,24 @@ Key rules:
   Skill-specific durable records live under `skills.<skill_id>.records`.
 - A direct user statement about a durable preference or brand fact is persisted
   through the generated `scripts/profile_store.py` entrypoint and reported back.
-- Every new Skill carries a real user case, a dimension map, a pricing basis,
-  and explicit paid/free distribution states. A scaffold is incomplete until
-  those records are filled and validated.
+- Every new Skill carries a trust bundle: a user case, a dimension map, a
+  pricing basis, and explicit paid/free distribution states. The initializer
+  ships them as marked scaffold placeholders that pass the local gate; real
+  evidence is required before `--strict` or publication.
 - Skill Publisher is a possible profile value, never a separate implementation mode.
 - Do not create remotes, releases, catalogs, platform packages, or uploads here.
-- If the Skill generates, edits, reviews, renders, packages, or publishes text
-  visible to an end user or reader, declare `lov-branding-consistency` in its
-  top-level `depends_on`. Preserve source data, quotations, transcripts, legal
-  text, identifiers, and code unless the user explicitly asks to rewrite them.
+- External sibling Skills are never a hard requirement. `depends_on` may only
+  list capabilities embedded in this source; anything else stays an optional,
+  artifact-level handoff that the Skill must degrade gracefully without.
+- When the Skill generates, edits, reviews, renders, packages, or publishes text
+  visible to an end user or reader, preserve source data, quotations,
+  transcripts, legal text, identifiers, and code unless the user explicitly
+  asks to rewrite them.
 - Classify normal output as `authored-prose`, `microcopy`, `verbatim`, or
   `deterministic-output` before scaffolding. Authored prose receives an
-  authorship-integrity contract; microcopy receives branding review; verbatim
-  material remains source-faithful; deterministic output is accepted on
-  correctness and completeness.
+  authorship-integrity contract; microcopy receives a clarity and tone review
+  against the shared brand Profile; verbatim material remains source-faithful;
+  deterministic output is accepted on correctness and completeness.
 
 ## Creation Workflow
 
@@ -125,9 +127,9 @@ Record these decisions internally:
    - `deterministic-output` for retrieval, storage, deployment, diagnostics,
      structured data, and binary transformation.
 7. Use `--content-class authored-prose` or `--authored-prose` for the first
-   class. Authored prose and microcopy automatically enable
-   `lov-branding-consistency`; authored prose also generates and routes to
-   `references/authorship-integrity.md`.
+   class. Authored prose also generates and routes to
+   `references/authorship-integrity.md`. No output class injects an external
+   Skill dependency.
 8. Choose accurate, brief, elegant and consistent display names, starting from
    names and style examples the user has approved. Favor memorable product names;
    functional, result, role and metaphor names are all valid. Do not force every
@@ -218,7 +220,9 @@ Skill Publisher-only branch; different users supply different profile values.
 - User Profile contract → `skill.yaml`, `references/user-profile.md`, and the
   standalone `scripts/profile_store.py` reader/writer; this is always generated.
 - Skill trust evidence → `skill-card.yaml`, `skill-card.md`,
-  `cases/cases.json`, and `pricing-card.yaml`.
+  `cases/cases.json`, and `pricing-card.yaml`, generated as marked scaffold
+  placeholders that pass the local gate and are upgraded to real evidence
+  before publication.
 - Skill group decision → `references/skill-composition.md`, including nearby
   Skills inspected, atomic handoffs, overlap decisions, and the final
   Single-versus-Kit rationale.
@@ -249,8 +253,7 @@ python3 "$SKILL_DIR/scripts/init_skill.py" <name> \
 
 Use `microcopy` for short audience-visible text, `verbatim` when source fidelity
 owns acceptance, and `deterministic-output` for operational or structured
-results. `--branding-consistency` remains an explicit override for unusual
-mixed-output Skills.
+results. No content class injects an external Skill dependency.
 
 Skill Kit:
 
@@ -272,31 +275,15 @@ python3 "$SKILL_DIR/scripts/init_skill.py" publishing \
   --install-dir "$SKILL_SKILLS_INSTALL_DIR"
 ```
 
+A Kit carries one trust bundle at the controller level by default; embedded
+modules inherit it. Add `--with-module-cards` only when a module is published
+and installed independently.
+
 Resolve the install directory from an explicit flag, environment variable,
 shared profile, or the active agent runtime. If it remains unknown, ask once.
 The initializer must reject an occupied install target instead of overwriting it.
-
-> Tool pit: `init_skill.py` 只把 `~/.claude/skills/lov-{name}` 建为指向真源的
-> 绝对 symlink；要符合 Lovstudio 三层链约定，需再补中间层
-> `~/.agents/skills/lov-{name}`（绝对指向真源）并把 install 改成相对
-> `../../.agents/skills/lov-{name}`，`readlink -f` 才会解析到真源
-> （2026-08-20, ab88955）。
->
-> Tool pit: skills 仓库 working tree 常驻大量未提交改动（其他 skill 的 WIP、
-> 子模块指针），`git add -A` / `git commit -a` 会把它们卷进提交；提交前先
-> `git status`，只 `git add <目标 skill 目录>`（2026-08-20, 99c10a0）。
->
-> Tool pit: `validate_skill.py` 对 description 按「compact 后文本」计 50–200
-> 字符，中英混排极易超 200；先写短版过校验再展开正文（2026-08-20, 009afde）。
->
-> Tool pit: 卡片/案例文件里 `dict[str, list[str]]` 这类花括号字面量会被
-> `contains_placeholder` 的 `\{[^}]+\}` 误判为占位符；skill-card / cases /
-> pricing 文件一律避免花括号写法（2026-08-20, 009afde）。
->
-> Tool pit: `~/lovstudio/coding/skills/skill-creator-skill` 是**嵌套独立 git
-> 仓库**（自带 .git），父仓库 `~/lovstudio/coding/skills` 把它当单个未跟踪目录，
-> 从父仓库 `git add` 内部文件不会生效；改 skill-creator 源要在其自身仓库内提交
-> （2026-08-20, c09a0a1）。
+On hosts without symlink permission it falls back to a directory junction and
+then to a copy, and reports which link mode was used.
 
 For cloud-split implementations, read `references/cloud-split.md` completely
 before coding. Keep real logic in the configured cloud handler, return minimal
@@ -313,7 +300,7 @@ Write the source as instructions for an agent, not as notes about this chat:
 - Keep `SKILL.md` below 500 lines; move detail to relevant references.
 - Put `compatibility` and `depends_on` at the top level. Keep version, tags,
   card standard, and package-only runtime metadata under `metadata`.
-- Keep the NVIDIA-compatible required card fields intact, then add LovStudio's
+- Keep the NVIDIA-compatible required card fields intact, then add the
   user case, dimension map, pricing basis, and distribution fields.
 - Keep external Skills optional unless they are embedded Kit modules; expose
   artifact-level handoffs instead of hidden cross-Skill coupling.
@@ -332,6 +319,18 @@ the Profile contract, examples, dependencies, and quality gate.
 python3 scripts/validate_skill.py .
 ```
 
+The initializer ships a **completable scaffold**: every trust-bundle file is
+pre-filled with structurally valid example content marked `scaffold: true`, so a
+fresh source passes validation immediately. Warnings list the records still
+waiting for real evidence; they do not fail the run.
+
+```bash
+python3 scripts/validate_skill.py . --strict   # release gate
+```
+
+`--strict` promotes every scaffold warning to an error. Use it before handing a
+source to `skill-publisher` or any external channel.
+
 Completion requires:
 
 1. Validation passes with standard YAML.
@@ -341,17 +340,20 @@ Completion requires:
 4. The local install path resolves to this source directory.
 5. A documented activation phrase works and a non-trigger stays outside scope.
 6. Every Skill Kit module and at least one named pipeline are exercised.
-7. Every new Skill has at least one verified Input → Prompt → Output case,
+7. Every new Skill carries the trust bundle: an Input → Prompt → Output case,
    three or more named dimensions with evidence, a pricing basis, and explicit
-   paid/free channel states.
+   paid/free channel states. Scaffold placeholders satisfy the local gate; real
+   verified evidence is required before `--strict` or publication.
 8. `references/skill-composition.md` records the inspected Skill group, atomic
    handoffs or overlap decision, and why the result is a Single Skill or Kit.
 9. Display names agree with the description and actual workflow, remain clear
    without conversation context, and are distinguishable from nearby Skills.
    Corresponding README, Card and requested catalog display fields agree.
+10. Scaffold markers are removed only when the matching real evidence exists.
+   Never delete a marker to make `--strict` pass.
 
 Stop at the local result unless the user also requests publication. When they
-do, invoke `lov-skill-publisher` with the validated source path and requested
+do, invoke `skill-publisher` with the validated source path and requested
 channels; do not duplicate publishing logic in this Skill.
 
 ## Design Patterns
